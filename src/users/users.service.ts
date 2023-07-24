@@ -1,3 +1,4 @@
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import {
   BadRequestException,
   Injectable,
@@ -8,10 +9,10 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { hash } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 
 export interface UserFindOne {
-  id?: number;
+  id?: string;
   email?: string;
 }
 @Injectable()
@@ -35,34 +36,63 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+    const users = await this.userRepository.find();
+
+    users.forEach((user) => {
+      delete user.password; //elimina la password de todos los usuarios
+    });
+
+    return users;
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: string): Promise<User> {
     // busca en la base de datos el id
     const user = await this.userRepository.findOne({ where: { id: id } });
     // si no hay un id , el siguiente error
     if (!user) {
       throw new NotFoundException('usuario no encontrado');
     }
+
+    delete user.password; //elimina la password del usuario
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    // busca por id el usuario que modificara
-    const userModified = await this.userRepository.findOne({
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    // busca por id el usuario que se modificará
+    const user = await this.userRepository.findOne({
       where: { id: id },
     });
-    // si no lo encuentra mandara el siguiente error
-    if (!userModified) throw new NotFoundException('Usuario no encontrado');
+    // si no lo encuentra mandará el siguiente error
+    if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    // si lo encuentra
-    updateUserDto.password = await hash(updateUserDto.password, 10);
-    return this.userRepository.update(id, updateUserDto);
+    // copia los datos de updateUserDto a user
+    Object.assign(user, updateUserDto);
+
+    // se extrae el campo password del objeto user
+    const { password, ...passwordModified } = user;
+
+    await this.userRepository.save(user);
+
+    return passwordModified;
   }
 
-  async remove(id: number): Promise<void> {
-    await this.userRepository.delete(id);
+  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
+    // busca el usuario en la base de datos
+    const user = await this.userRepository.findOne({ where: { id: id } });
+
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    // compara contraseña actual con la de la base de datos hasheada
+    const validPassword = await compare(
+      updatePasswordDto.password,
+      user.password,
+    );
+
+    if (!validPassword) throw new BadRequestException('Contraseña incorrecta');
+
+    // guarda la nueva contraseña en la base de datos
+    user.password = updatePasswordDto.newPassword;
+    await this.userRepository.save(user);
   }
 
   async findOneUser(data: UserFindOne) {
@@ -71,5 +101,9 @@ export class UsersService {
       .where(data)
       .addSelect('user.password')
       .getOne();
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.userRepository.delete(id);
   }
 }

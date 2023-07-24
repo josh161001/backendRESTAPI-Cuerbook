@@ -1,5 +1,6 @@
 import { hash } from 'bcrypt';
 import {
+  UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
   Column,
@@ -9,8 +10,8 @@ import {
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 256 })
   name: string;
@@ -18,11 +19,23 @@ export class User {
   @Column({ length: 256, unique: true, nullable: false })
   email: string;
 
-  @Column({ length: 60, select: false, nullable: false })
+  @Column({ length: 60 })
   password: string;
 
+  @Column({ nullable: true })
+  imagen: string;
+
+  @Column({ default: 0 })
+  modified: number;
+
+  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  modifiedAt: Date;
+
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  createdUser: Date;
+  createdAt: Date;
+
+  @Column({ default: 'admin' })
+  rol: string;
 
   @Column({ type: 'bool', default: true })
   status: boolean;
@@ -31,8 +44,15 @@ export class User {
   @BeforeUpdate()
   async hasPassword() {
     if (!this.password) {
-      return;
+      return; // si no hay contraseña no hace nada
     }
+
     this.password = await hash(this.password, 10);
+
+    if (typeof this.modified !== 'number') {
+      this.modified = 0;
+    }
+
+    this.modified++; // Incrementar el contador de modificacion
   }
 }

@@ -11,6 +11,9 @@ import {
   DATABASE_PORT,
   DATABASE_USERNAME,
 } from './config/constants';
+import { EventsModule } from './events/events.module';
+import { GroupsModule } from './groups/groups.module';
+import { NoticeModule } from './notice/notice.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,9 +33,12 @@ import {
         synchronize: true,
       }),
     }),
-    UsersModule,
     AuthModule,
+    UsersModule,
     ConfigModule,
+    EventsModule,
+    GroupsModule,
+    NoticeModule,
   ],
   controllers: [],
   providers: [],
