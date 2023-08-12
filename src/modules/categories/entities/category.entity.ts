@@ -7,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -19,9 +20,8 @@ export class Category {
   @Column({ default: 0 })
   modified: number;
 
-  @ManyToOne(() => Group, (group) => group.categories)
-  @JoinColumn({ name: 'group_id' }) // Cambiar aquí el nombre de la columna de clave foránea
-  group: Group;
+  @OneToMany(() => Group, (group) => group.Categories)
+  group: Group[];
 
   @UpdateDateColumn()
   modifiedAt: Date;

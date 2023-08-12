@@ -14,7 +14,9 @@ export class UserToEvent {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Event, (event) => event.userToEvents)
+  @ManyToOne(() => Event, (event) => event.userToEvents, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'eventId' })
   event: Event;
 

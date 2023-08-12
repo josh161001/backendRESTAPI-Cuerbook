@@ -20,7 +20,6 @@ const source = new DataSource({
 export default source;
 
 // migrations commands // package.json
-
 // npm run typeorm:generate-migration --name=CreatePost
 // npm run typeorm:run-migrations
 // npm run typeorm:revert-migration

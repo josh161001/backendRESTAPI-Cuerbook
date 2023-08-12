@@ -7,7 +7,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -37,10 +39,11 @@ export class Group {
   })
   userToGroups: UserToGroup[];
 
-  @OneToMany(() => Category, (category) => category.group, {
+  @OneToOne(() => Category, (category) => category.group, {
     onDelete: 'CASCADE',
   })
-  categories: Category[]; // Asegúrate de que la propiedad se llame "categories."
+  @JoinColumn({ name: 'categoryId' })
+  Categories: Category;
 
   @OneToMany(() => Event, (event) => event.group)
   events: Event[];

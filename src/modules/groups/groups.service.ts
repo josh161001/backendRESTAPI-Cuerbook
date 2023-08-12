@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Group } from './entities/group.entity';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { UserToGroup } from '../users/entities/userToGroup.entity';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { User } from '../users/entities/user.entity';
+import { Group } from './entities/group.entity';
 
 @Injectable()
 export class GroupsService {
@@ -55,6 +55,7 @@ export class GroupsService {
       .createQueryBuilder('group')
       .leftJoinAndSelect('group.userToGroups', 'userToGroup') // Cargar la relación 'userToGroups' con la tabla UserToGroup
       .leftJoinAndSelect('userToGroup.user', 'user') // Cargar los datos completos de la entidad User
+      .leftJoinAndSelect('group.events', 'event') // Cargar los datos completos de la entidad Event
       .getMany();
 
     return groups;

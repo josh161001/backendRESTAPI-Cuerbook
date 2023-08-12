@@ -18,19 +18,22 @@ export class Event {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 256 })
+  @Column({ length: 256, nullable: false })
   name: string;
 
   @Column({ nullable: true })
   imagen: string;
 
-  @Column({ nullable: true })
-  fecha: Date;
+  @Column({ nullable: false })
+  cupo: number;
 
   @Column({ nullable: true })
+  fecha: Date | null;
+
+  @Column({ nullable: false })
   lugar: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: false })
   description: string;
 
   @Column({ default: 0 })
@@ -39,7 +42,9 @@ export class Event {
   @Column({ type: 'bool', default: true })
   status: boolean;
 
-  @ManyToOne(() => Group, (group) => group.events)
+  @ManyToOne(() => Group, (group) => group.events, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'groupId' })
   group: Group;
 
