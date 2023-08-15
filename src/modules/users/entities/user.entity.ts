@@ -30,8 +30,8 @@ export class User {
   @Column({ nullable: true })
   imagen: string;
 
-  @Column({ default: 'user', nullable: false })
-  rol: string;
+  @Column({ type: 'simple-array' })
+  roles: string[];
 
   @Column({ type: 'bool', default: true, nullable: false })
   status: boolean;
@@ -42,7 +42,7 @@ export class User {
   @OneToMany(() => UserToEvent, (userToEvent) => userToEvent.user)
   events: UserToEvent[];
 
-  @OneToMany(() => Notice, (notice) => notice.user) //crea la relacion de uno a muchos en la tabla notice
+  @OneToMany(() => Notice, (notice) => notice.user, { onDelete: 'CASCADE' }) //crea la relacion de uno a muchos en la tabla notice
   notice: Notice[];
 
   @Column({ default: 0, nullable: false })

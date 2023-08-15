@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -39,7 +40,7 @@ export class Group {
   })
   userToGroups: UserToGroup[];
 
-  @OneToOne(() => Category, (category) => category.group, {
+  @ManyToOne(() => Category, (category) => category.group, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'categoryId' })

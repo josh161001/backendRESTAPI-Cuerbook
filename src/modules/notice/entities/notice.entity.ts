@@ -45,10 +45,12 @@ export class Notice {
     if (typeof this.modified !== 'number') {
       this.modified = 0;
     }
-    this.modified++; // Incrementa el contador de modificacion
+    this.modified++; // Incrementa el npm run contador de modificacion
   }
 
-  @ManyToOne((type) => User, (User) => User.notice, {}) //se hace la relacion de uno a muchos
+  @ManyToOne((type) => User, (User) => User.notice, {
+    onDelete: 'CASCADE',
+  }) //se hace la relacion de uno a muchos
   @JoinColumn({ name: 'userId' })
   user: User;
 }

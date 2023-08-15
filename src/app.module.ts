@@ -2,14 +2,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AccessControlModule } from 'nest-access-control';
 
-// entities
-import { User } from './modules/users/entities/user.entity';
-import { UserToGroup } from './modules/users/entities/userToGroup.entity';
-import { Group } from './modules/groups/entities/group.entity';
-import { Event } from './modules/events/entities/event.entity';
-import { Notice } from './modules/notice/entities/notice.entity';
-import { UserToEvent } from './modules/users/entities/userToEvent.entity';
+import { roles } from './app.roles';
+
 //modules
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -26,6 +22,9 @@ import {
   DATABASE_USERNAME,
   PORT,
 } from './config/config.keys';
+import { NestFactory } from '@nestjs/core';
+import { DataSource } from 'typeorm';
+import InitSeeder from './database/seeds/init.seeder';
 
 @Module({
   imports: [
@@ -42,14 +41,13 @@ import {
         username: config.get<string>(DATABASE_USERNAME),
         password: config.get<string>(DATABASE_PASSWORD),
         database: config.get<string>(DATABASE_NAME),
-        // entities: [User, UserToGroup, Group, UserToEvent, Event, Notice],
         synchronize: true,
         dropSchema: false,
         entities: ['dist/**/**/*.entity{.js,.ts}'],
         migrations: ['dist/database/migrations/*{.js,.ts}'],
       }),
     }),
-
+    AccessControlModule.forRoles(roles),
     AuthModule,
     UsersModule,
     ConfigModule,
@@ -65,5 +63,12 @@ export class AppModule {
   static port: number | string;
   constructor(private readonly configService: ConfigService) {
     AppModule.port = this.configService.get(PORT);
+  }
+  // crea un usuario admin por defecto por seeder
+  async onModuleInit() {
+    const app = await NestFactory.create(AppModule);
+    const dataSource = app.get(DataSource);
+    const initSeeder = new InitSeeder();
+    await initSeeder.run(dataSource);
   }
 }

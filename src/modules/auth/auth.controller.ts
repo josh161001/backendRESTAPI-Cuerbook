@@ -44,7 +44,7 @@ export class AuthController {
   }
   @UseGuards(JwtAuthGuard)
   @Get('refresh')
-  async tokenRefresh(@Req() req) {
+  async tokenRefresh(@Req() req: any) {
     const data = await this.authService.login(req.user);
     return {
       message: 'refresh exitoso',

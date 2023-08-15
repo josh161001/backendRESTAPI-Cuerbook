@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsInt, IsString } from 'class-validator';
 
 export class CreateGroupDto {
   @IsString()
@@ -18,4 +18,8 @@ export class CreateGroupDto {
     example: 'Grupo de contabilidad de la carrera de Gestion empresarial',
   })
   description: string;
+
+  @ApiProperty({ example: '1' })
+  @IsInt()
+  categoryId: number;
 }

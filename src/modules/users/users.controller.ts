@@ -1,27 +1,35 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
   BadRequestException,
-  HttpException,
-  HttpStatus,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { ACGuard, UseRoles } from 'nest-access-control';
 import { UsersService } from './users.service';
+import { AppResource } from 'src/app.roles';
+import { Auth } from 'src/common/decorator/auth';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags } from '@nestjs/swagger';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { Auth } from 'src/common/decorator/auth';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(ACGuard)
+  @UseRoles({
+    resource: AppResource.USERS,
+    action: 'create',
+    possession: 'any',
+  })
+  @Auth()
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const { name, email, password } = createUserDto;

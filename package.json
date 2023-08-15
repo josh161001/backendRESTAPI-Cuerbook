@@ -21,11 +21,12 @@
     "typeorm": "ts-node ./node_modules/typeorm/cli",
     "typeorm:generate-migration": "npm run typeorm -- -d ./ormconfig.ts migration:generate src/database/migrations/%npm_config_name%",
     "typeorm:run-migrations": "npm run typeorm migration:run -- -d ./ormconfig.ts",
-    "typeorm:revert-migration": "npm run typeorm -- -d ./ormconfig.ts migration:revert"
+    "typeorm:revert-migration": "npm run typeorm -- -d ./ormconfig.ts migration:revert",
+    "typeorm:run-seeders": "npm run typeorm -- migration:run && ts-node ./node_modules/typeorm-seeding/dist/cli.js"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
-    "@nestjs/config": "^2.3.2",
+    "@nestjs/config": "^2.3.4",
     "@nestjs/core": "^9.0.0",
     "@nestjs/jwt": "^10.0.3",
     "@nestjs/passport": "^9.0.3",
@@ -43,11 +44,12 @@
     "nest-access-control": "^2.2.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
-    "pg": "^8.11.0",
+    "pg": "^8.11.2",
     "react-bootstrap": "^2.7.4",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
-    "typeorm": "^0.3.16",
+    "typeorm": "^0.3.17",
+    "typeorm-extension": "^3.0.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

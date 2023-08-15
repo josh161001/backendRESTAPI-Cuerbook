@@ -8,17 +8,18 @@ import {
   Delete,
   Req,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 // entities
 import { Group } from './entities/group.entity';
 import { User } from '../users/entities/user.entity';
 
 import { CreateGroupDto } from './dto/create-group.dto';
-import { GroupsService } from './groups.service';
 
 import { ApiTags } from '@nestjs/swagger';
 import { Auth } from 'src/common/decorator/auth';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { GroupsService } from './groups.service';
 
 @ApiTags('groups')
 @Controller('groups')
@@ -28,6 +29,7 @@ export class GroupsController {
   @Auth()
   @Post()
   async createGroup(
+    @Body('categoryId') categoryId: number,
     @Body() createGroupDto: CreateGroupDto,
     @Req() req,
   ): Promise<Group> {
@@ -38,7 +40,11 @@ export class GroupsController {
     }
 
     // Llamamos a la función createGroup del servicio para crear el grupo
-    const newGroup = await this.groupsService.createGroup(createGroupDto, user);
+    const newGroup = await this.groupsService.create(
+      categoryId,
+      createGroupDto,
+      user,
+    );
 
     return newGroup;
   }

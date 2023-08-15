@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsEnum,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import { AppRoles } from 'src/app.roles';
+import { EnumToString } from 'src/common/decorator/enum';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'Grupo de Gestion empresarial' })
@@ -16,4 +25,12 @@ export class CreateUserDto {
   @MaxLength(60)
   @IsString()
   password: string;
+
+  @ApiProperty()
+  @IsArray()
+  @IsEnum(AppRoles, {
+    each: true,
+    message: `Los roles validos son ${EnumToString(AppRoles)}}`,
+  })
+  roles: string[];
 }
