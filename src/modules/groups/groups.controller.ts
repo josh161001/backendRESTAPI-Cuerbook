@@ -17,9 +17,9 @@ import { User } from '../users/entities/user.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 
 import { ApiTags } from '@nestjs/swagger';
-import { Auth } from 'src/common/decorator/auth';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupsService } from './groups.service';
+import { Auth } from 'src/common/decorator/auth.decorator';
 
 @ApiTags('groups')
 @Controller('groups')

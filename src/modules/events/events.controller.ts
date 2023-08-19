@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 
 import { ApiTags } from '@nestjs/swagger';
-import { Auth } from 'src/common/decorator/auth';
 
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -19,6 +18,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { EventsService } from './events.service';
 
 import { User } from '../users/entities/user.entity';
+import { Auth } from 'src/common/decorator/auth.decorator';
 
 @ApiTags('events')
 @Controller('events')

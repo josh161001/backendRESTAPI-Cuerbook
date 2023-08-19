@@ -1,10 +1,8 @@
 // config module
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccessControlModule } from 'nest-access-control';
-
-import { roles } from './app.roles';
 
 //modules
 import { AuthModule } from './modules/auth/auth.module';
@@ -13,6 +11,7 @@ import { GroupsModule } from './modules/groups/groups.module';
 import { EventsModule } from './modules/events/events.module';
 import { NoticeModule } from './modules/notice/notice.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { roles } from './app.roles';
 
 import {
   DATABASE_HOST,
@@ -28,10 +27,6 @@ import InitSeeder from './database/seeds/init.seeder';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -46,6 +41,10 @@ import InitSeeder from './database/seeds/init.seeder';
         entities: ['dist/**/**/*.entity{.js,.ts}'],
         migrations: ['dist/database/migrations/*{.js,.ts}'],
       }),
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
     AccessControlModule.forRoles(roles),
     AuthModule,

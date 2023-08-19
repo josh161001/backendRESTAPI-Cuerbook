@@ -8,10 +8,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guard/local-auth.guard';
-import { JwtAuthGuard } from './guard/jwt-auth.guard';
+
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { LoginUserDto } from './dto/login.dto';
+import { LocalAuthGuard } from './guard/local-auth.guard';
+import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import { User } from 'src/common/decorator/user.decorator';
+import { User as EntityUser } from '../users/entities/user.entity';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -21,9 +24,9 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Body() loginDto: LoginUserDto, @Req() req) {
+  async login(@Body() loginDto: LoginUserDto, @User() user: EntityUser) {
     try {
-      const data = await this.authService.login(req.user);
+      const data = await this.authService.login(user);
       return {
         message: 'login exitoso',
         data,

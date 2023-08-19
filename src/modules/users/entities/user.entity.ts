@@ -30,11 +30,11 @@ export class User {
   @Column({ nullable: true })
   imagen: string;
 
-  @Column({ type: 'simple-array' })
-  roles: string[];
-
   @Column({ type: 'bool', default: true, nullable: false })
   status: boolean;
+
+  @Column({ type: 'simple-array', nullable: true })
+  roles: string[]; //
 
   @OneToMany(() => UserToGroup, (userToGroup) => userToGroup.user)
   groups: UserToGroup[];

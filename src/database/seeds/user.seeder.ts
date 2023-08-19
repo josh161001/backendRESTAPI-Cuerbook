@@ -1,5 +1,5 @@
-import { roles } from './../../app.roles';
 import { hash } from 'bcrypt';
+import { AppRoles } from 'src/app.roles';
 import { User } from 'src/modules/users/entities/user.entity';
 import { DataSource } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
@@ -11,8 +11,8 @@ export default class UserSeeder implements Seeder {
     const data = {
       name: 'admin',
       email: 'l19480829@nuevoleon.tecnm.mx',
-      password: await hash('admin', 10),
-      roles: ['ADMIN'],
+      password: await hash('161001', 10),
+      roles: [AppRoles.admin], //
       status: true,
     };
 

@@ -10,13 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ACGuard, UseRoles } from 'nest-access-control';
 import { UsersService } from './users.service';
-import { AppResource } from 'src/app.roles';
-import { Auth } from 'src/common/decorator/auth';
+import { ACGuard, UseRoles } from 'nest-access-control';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Auth } from 'src/common/decorator/auth.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -25,7 +25,7 @@ export class UsersController {
 
   @UseGuards(ACGuard)
   @UseRoles({
-    resource: AppResource.USERS,
+    resource: 'users',
     action: 'create',
     possession: 'any',
   })
