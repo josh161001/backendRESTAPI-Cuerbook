@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { compare, hash } from 'bcrypt';
+import { compare } from 'bcrypt';
 
 export interface UserFindOne {
   id?: string;
@@ -50,27 +50,29 @@ export class UsersService {
     return users;
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string, userEntity?: User): Promise<User> {
     const user = await this.userRepository
       .createQueryBuilder('user')
       .where({ id: id })
       .leftJoinAndSelect('user.groups', 'userToGroup') // Cargar la relación 'groups' con la tabla UserToGroup
       .leftJoinAndSelect('userToGroup.group', 'group') // Cargar los datos completos de la entidad Group
-      .getOne();
+      .getOne()
+      .then((u) =>
+        !userEntity ? u : !!u && userEntity.id === u.id ? u : null,
+      );
 
     if (!user) {
-      throw new NotFoundException('usuario no encontrado');
+      throw new NotFoundException('usuario no encontrado o no autorizado');
     }
 
     delete user.password; //elimina la password del usuario
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto, userEntity?: User) {
     const user = await this.userRepository.findOne({
-      where: { id: id },
+      where: { id: id, ...(userEntity ? { id: userEntity.id } : {}) },
     });
-
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
     // copia los datos de updateUserDto a user
@@ -84,21 +86,36 @@ export class UsersService {
     return passwordRemove;
   }
 
-  async updatePassword(id: string, updatePasswordDto: UpdatePasswordDto) {
-    // busca el usuario en la base de datos
-    const user = await this.userRepository.findOne({ where: { id: id } });
+  //busca un usuario por id si concide con el id del usuario logueado
+  //se elimina el usuario, si no concide me manda unobjeto vacio y no se elimina
+  async remove(id: string, userEntity?: User) {
+    const user = await this.userRepository.findOne({
+      where: { id: id, ...(userEntity ? { id: userEntity.id } : {}) },
+    });
 
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    // compara contraseña actual con la de la base de datos hasheada
-    const validPassword = await compare(
-      updatePasswordDto.password,
-      user.password,
-    );
+    await this.userRepository.delete(id);
+  }
 
-    if (!validPassword) throw new BadRequestException('Contraseña incorrecta');
+  //actualiza la contraseña del usuario  si conincide con la contraseña actual hasheada
+  async updatePassword(
+    id: string,
+    updatePasswordDto: UpdatePasswordDto,
+    userEntity?: User,
+  ) {
+    const user = await this.userRepository.findOne({
+      where: { id: id, ...(userEntity ? { id: userEntity.id } : {}) },
+    });
 
-    // guarda la nueva contraseña en la base de datos
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const passValid = await compare(updatePasswordDto.password, user.password);
+    if (!passValid)
+      throw new BadRequestException(
+        'las contrasenas no coinciden o no estas autorizado',
+      );
+
     user.password = updatePasswordDto.newPassword;
     await this.userRepository.save(user);
   }
@@ -109,9 +126,5 @@ export class UsersService {
       .where(data)
       .addSelect('user.password')
       .getOne();
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.userRepository.delete(id);
   }
 }

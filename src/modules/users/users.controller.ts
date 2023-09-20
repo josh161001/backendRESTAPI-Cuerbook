@@ -7,29 +7,29 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { ACGuard, UseRoles } from 'nest-access-control';
+import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { AppResource } from 'src/app.roles';
+import { User } from 'src/common/decorator/user.decorator';
+import { User as UserEntity } from './entities/user.entity';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    @InjectRolesBuilder()
+    private readonly rolesBuilder: RolesBuilder,
+  ) {}
 
-  @UseGuards(ACGuard)
-  @UseRoles({
-    resource: 'users',
-    action: 'create',
-    possession: 'any',
-  })
-  @Auth()
+  @Auth({ resource: AppResource.users, action: 'create', possession: 'any' })
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const { name, email, password } = createUserDto;
@@ -72,28 +72,56 @@ export class UsersController {
     return { data };
   }
 
-  @Auth()
+  @Auth({ resource: AppResource.users, action: 'update', possession: 'own' })
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.usersService.update(id, updateUserDto);
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @User() user: UserEntity,
+  ) {
+    let data;
+
+    if (
+      this.rolesBuilder.can(user.roles).updateAny(AppResource.users).granted
+    ) {
+      data = await this.usersService.update(id, updateUserDto);
+    } else {
+      const { roles, ...rest } = updateUserDto;
+      data = await this.usersService.update(id, rest, user);
+    }
+
+    return { message: 'Usuario actualizado', data };
   }
-  @Auth()
+  @Auth({ resource: AppResource.users, action: 'update', possession: 'own' })
   @Patch(':id/actualizar-password')
   async updatePassword(
     @Param('id') id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
+    @User() user: UserEntity,
   ) {
-    await this.usersService.updatePassword(id, updatePasswordDto);
+    let data;
+    if (
+      this.rolesBuilder.can(user.roles).updateAny(AppResource.users).granted
+    ) {
+      data = await this.usersService.updatePassword(id, updatePasswordDto);
+    } else {
+      data = await this.usersService.updatePassword(
+        id,
+        updatePasswordDto,
+        user,
+      );
+    }
 
     return {
-      message: 'contraseña actualizada',
+      message: 'Password actualizada',
+      data,
     };
   }
 
-  @Auth()
+  @Auth({ action: 'delete', possession: 'any', resource: AppResource.users })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    const data = this.usersService.remove(id);
+  async deleteUser(@Param('id') id: string) {
+    const data = await this.usersService.remove(id);
 
     return {
       message: 'Usuario eliminado',

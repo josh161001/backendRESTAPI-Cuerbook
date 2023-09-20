@@ -8,7 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { LoginUserDto } from './dto/login.dto';
 import { LocalAuthGuard } from './guard/local-auth.guard';
@@ -39,6 +38,8 @@ export class AuthController {
   @Get('profile')
   profile(@Req() req) {
     const user = req.user;
+
+    delete user.password;
 
     return {
       message: 'token activo',

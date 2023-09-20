@@ -7,6 +7,8 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { AppRoles } from 'src/app.roles';
+import { EnumToString } from 'src/common/enum/enum';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'Grupo de Gestion empresarial' })
@@ -24,11 +26,11 @@ export class CreateUserDto {
   @IsString()
   password: string;
 
-  // @ApiProperty()
-  // @IsArray()
-  // @IsEnum(AppRoles, {
-  //   each: true,
-  //   message: `Los roles validos son ${EnumToString(AppRoles)}}`,
-  // })
-  // roles: string[];
+  @ApiProperty()
+  @IsArray()
+  @IsEnum(AppRoles, {
+    each: true,
+    message: `Los roles validos son ${EnumToString(AppRoles)}}`,
+  })
+  roles: string[];
 }
