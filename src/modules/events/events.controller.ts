@@ -17,46 +17,112 @@ import { UpdateEventDto } from './dto/update-event.dto';
 
 import { EventsService } from './events.service';
 
-import { User } from '../users/entities/user.entity';
+import { User as UserEntity } from '../users/entities/user.entity';
 import { Auth } from 'src/common/decorator/auth.decorator';
+import { User } from 'src/common/decorator/user.decorator';
+import { AppResource } from 'src/app.roles';
+import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
 
 @ApiTags('events')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    @InjectRolesBuilder()
+    private readonly rolesBuilder: RolesBuilder,
+  ) {}
 
-  @Auth()
+  @Auth({
+    resource: AppResource.events,
+    action: 'create',
+    possession: 'own',
+  })
   @Post(':groupId')
   async create(
     @Param('groupId') groupId: string,
-    @Req() req,
     @Body() createEventDto: CreateEventDto,
+    @Body('categoryId') categoryId: number,
+    @User() user: UserEntity,
   ) {
-    const user: User = req.user?.userId;
-    if (!user) {
-      throw new UnauthorizedException('Usuario no autorizado');
-    }
-
-    return this.eventsService.create(groupId, createEventDto, user);
+    const data = await this.eventsService.create(
+      groupId,
+      createEventDto,
+      user,
+      categoryId,
+    );
+    return {
+      message: 'Evento creado con éxito',
+      data: data,
+    };
   }
 
   @Get()
-  findAll() {
-    return this.eventsService.findAll();
-  }
+  async findAll() {
+    const data = await this.eventsService.findAll();
 
+    return {
+      message: 'Lista de eventos',
+      data: data,
+    };
+  }
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const data = await this.eventsService.findOne(id);
+
+    return {
+      message: 'Evento encontrado',
+      data,
+    };
   }
 
+  @Auth({
+    resource: AppResource.events,
+    action: 'update',
+    possession: 'own',
+  })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(id, updateEventDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateEventDto: UpdateEventDto,
+    @User() user?: UserEntity,
+  ) {
+    let data;
+
+    if (
+      this.rolesBuilder.can(user.roles).updateAny(AppResource.events).granted
+    ) {
+      data = this.eventsService.update(id, updateEventDto);
+    } else {
+      data = this.eventsService.update(id, updateEventDto, user);
+    }
+
+    return {
+      message: 'Evento actualizado con éxito',
+      data: data,
+    };
   }
 
+  // eliminar evento por id y el usuario que lo creo
+  @Auth({
+    resource: AppResource.events,
+    action: 'delete',
+    possession: 'own',
+  })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.eventsService.remove(id);
+  remove(@Param('id') id: string, user?: UserEntity) {
+    let data;
+
+    if (
+      this.rolesBuilder.can(user.roles).deleteAny(AppResource.events).granted
+    ) {
+      data = this.eventsService.remove(id);
+    } else {
+      data = this.eventsService.remove(id, user);
+    }
+
+    return {
+      message: 'Evento eliminado con éxito',
+      data,
+    };
   }
 }

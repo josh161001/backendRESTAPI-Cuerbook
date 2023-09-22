@@ -6,11 +6,9 @@ import {
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserToGroup } from '../users/entities/userToGroup.entity';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { User } from '../users/entities/user.entity';
 import { Group } from './entities/group.entity';
-import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class GroupsService {
@@ -19,81 +17,74 @@ export class GroupsService {
     private readonly groupRepository: Repository<Group>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(UserToGroup)
-    private readonly userToGroupRepository: Repository<UserToGroup>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
   ) {}
-
-  async create(
-    categoryId: number,
-    groupDto: CreateGroupDto,
-    user: User,
-  ): Promise<Group> {
-    const nameGroup = await this.groupRepository.findOne({
+  // crea un grupo y lo asocia al usuario que lo crea autoenticado
+  async createOne(groupDto: CreateGroupDto, user: User) {
+    const nombreGrupo = await this.groupRepository.findOne({
       where: { name: groupDto.name },
     });
 
-    if (nameGroup) {
-      throw new BadRequestException('El grupo ya está registrado');
-    }
+    if (nombreGrupo)
+      throw new BadRequestException('El nombre del grupo ya existe');
 
-    const category = await this.categoryRepository.findOne({
-      where: { id: categoryId },
-    });
-
-    const group: Group = this.groupRepository.create({
+    const grupo = await this.groupRepository.create({
       ...groupDto,
-      Categories: category,
-    });
-
-    // Guardamos el grupo en la tabla 'Group'
-    const saveGroup: Group = await this.groupRepository.save(group);
-
-    // Creamos una nueva entrada en la tabla 'UserToGroup' para establecer la relación
-    const userToGroup: UserToGroup = this.userToGroupRepository.create({
       user,
-      group: saveGroup, // Asignamos el grupo recién creado
     });
 
-    // Guardamos la relación usuario-grupo en la tabla 'UserToGroup'
-    await this.userToGroupRepository.save(userToGroup);
+    delete grupo.user.password;
 
-    return saveGroup;
+    return await this.groupRepository.save(grupo);
   }
 
+  // devuelve todos los grupos
   async findAll(): Promise<Group[]> {
-    const groups = await this.groupRepository
-      .createQueryBuilder('group')
-      .leftJoinAndSelect('group.Categories', 'category') // Cargar los datos completos de la entidad Category
-      .leftJoinAndSelect('group.userToGroups', 'userToGroup') // Cargar la relación 'userToGroups' con la tabla UserToGroup
-      .leftJoinAndSelect('userToGroup.user', 'user') // Cargar los datos completos de la entidad User
-      .leftJoinAndSelect('group.events', 'event') // Cargar los datos completos de la entidad Event
-      .getMany();
+    const grupos = await this.groupRepository.find({
+      relations: ['user'],
+    });
 
-    return groups;
+    grupos.map((group) => {
+      delete group.user.password;
+    });
+
+    return grupos;
   }
 
+  // devuelve el grupo con id si coincide con el id del usuario logueado
+  async getByIdUser(id: string, userEntity?: User): Promise<Group> {
+    const grupo = await this.groupRepository
+      .findOne({ where: { id: id } })
+      .then((g) =>
+        !userEntity ? g : !!g && userEntity.id === g.user.id ? g : null,
+      );
+
+    if (!grupo)
+      throw new NotFoundException('Grupo no encontrado o no autorizado');
+
+    delete grupo.user;
+
+    return grupo;
+  }
+
+  // devuelve el grupo con id y elimina el campo password del usuario asociado
   async findOne(id: string): Promise<Group> {
-    const group = await this.groupRepository
-      .createQueryBuilder('group')
-      .where({ id: id })
-      .leftJoinAndSelect('group.userToGroups', 'userToGroup') // Cargar la relación userToGroups con la tabla UserToGroup
-      .leftJoinAndSelect('userToGroup.user', 'user') // Cargar los datos completos de la entidad User
-      .getOne();
+    const grupo = await this.groupRepository.findOne({
+      where: { id: id },
+      relations: ['user'],
+    });
 
-    if (!group) {
-      throw new NotFoundException('usuario no encontrado');
-    }
+    if (!grupo) throw new NotFoundException('Grupo no encontrado');
 
-    return group;
+    delete grupo.user.password;
+
+    return grupo;
   }
-
-  async update(id: string, updateGroupDto: UpdateGroupDto) {
-    const group = await this.groupRepository.findOne({ where: { id: id } });
+  // actualiza el grupo con id si coincide con el id del usuario logueado
+  async update(id: string, updateGroupDto: UpdateGroupDto, userEntity?: User) {
+    const group = await this.getByIdUser(id, userEntity);
 
     if (!group) {
-      throw new NotFoundException('grupo no encontrado');
+      throw new NotFoundException('Grupo no encontrado o no autorizado');
     }
 
     Object.assign(group, updateGroupDto);
@@ -103,7 +94,24 @@ export class GroupsService {
     return group;
   }
 
-  remove(id: string) {
-    return this.groupRepository.delete(id);
+  // elimina el grupo con id si coincide con el id del usuario logueado
+  async remove(id: string, userEntity?: User) {
+    try {
+      const group = await this.getByIdUser(id, userEntity);
+
+      if (!group) {
+        throw new NotFoundException('Grupo no encontrado o no autorizado');
+      }
+
+      // Asegúrate de eliminar el grupo utilizando remove()
+      const data = await this.groupRepository.remove(group);
+
+      return {
+        message: 'Grupo eliminado con éxito',
+        data,
+      };
+    } catch (error) {
+      throw new NotFoundException('Grupo no encontrado o no autorizado');
+    }
   }
 }

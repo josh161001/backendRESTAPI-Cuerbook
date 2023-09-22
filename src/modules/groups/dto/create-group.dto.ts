@@ -18,8 +18,4 @@ export class CreateGroupDto {
     example: 'Grupo de contabilidad de la carrera de Gestion empresarial',
   })
   description: string;
-
-  @ApiProperty({ example: '1' })
-  @IsInt()
-  categoryId: number;
 }

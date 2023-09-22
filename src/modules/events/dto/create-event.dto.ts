@@ -24,5 +24,9 @@ export class CreateEventDto {
 
   @ApiProperty()
   @IsNumber()
+  categoryId: number;
+
+  @ApiProperty()
+  @IsNumber()
   cupo: number;
 }

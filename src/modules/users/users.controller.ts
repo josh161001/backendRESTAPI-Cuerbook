@@ -29,18 +29,17 @@ export class UsersController {
     private readonly rolesBuilder: RolesBuilder,
   ) {}
 
+  // crea un usuario y crea unas validaciones para el email, nombre y password
   @Auth({ resource: AppResource.users, action: 'create', possession: 'any' })
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const { name, email, password } = createUserDto;
 
-    // Crea un formato de correo electrónico válido institucional de TecNM
     const emailRegex = /^l\d{8}@nuevoleon\.tecnm\.mx$/;
     if (!emailRegex.test(createUserDto.email)) {
       throw new BadRequestException('Formato incorrecto de email');
     }
 
-    // Valida que los campos no estén vacíos y no contengan solo espacios
     const trimName = name.trim();
     const trimEmail = email.trim();
     const trimPassword = password.trim();
@@ -60,18 +59,24 @@ export class UsersController {
     };
   }
 
+  // devuelve todos los usuarios
   @Get()
   async findAll() {
     const data = await this.usersService.findAll();
-    return { data };
+    return {
+      message: 'Usuarios encontrados',
+      data,
+    };
   }
 
+  // devuelve el usuario con id
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.usersService.findOne(id);
-    return { data };
+    return { message: 'Usuario encontrado', data };
   }
 
+  // actualiza el usuario con id con el usuario autenticado
   @Auth({ resource: AppResource.users, action: 'update', possession: 'own' })
   @Patch(':id')
   async updateUser(
@@ -92,6 +97,8 @@ export class UsersController {
 
     return { message: 'Usuario actualizado', data };
   }
+
+  //actualiza el password del usuario con id con el usuario autenticado
   @Auth({ resource: AppResource.users, action: 'update', possession: 'own' })
   @Patch(':id/actualizar-password')
   async updatePassword(
@@ -118,6 +125,7 @@ export class UsersController {
     };
   }
 
+  // elimina el usuario con id con el usuario autenticado
   @Auth({ action: 'delete', possession: 'any', resource: AppResource.users })
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {

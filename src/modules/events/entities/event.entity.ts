@@ -1,5 +1,5 @@
+import { Category } from 'src/modules/categories/entities/category.entity';
 import { Group } from '../../groups/entities/group.entity';
-import { UserToEvent } from '../../users/entities/userToEvent.entity';
 import {
   BeforeInsert,
   BeforeUpdate,
@@ -12,6 +12,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from 'src/modules/users/entities/user.entity';
 
 @Entity()
 export class Event {
@@ -48,8 +49,17 @@ export class Event {
   @JoinColumn({ name: 'groupId' })
   group: Group;
 
-  @OneToMany(() => UserToEvent, (userToEvent) => userToEvent.event)
-  userToEvents: UserToEvent[];
+  @ManyToOne(() => Category, (category) => category.event, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'categoryId' })
+  Categories: Category;
+
+  @ManyToOne(() => User, (user) => user.events, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @UpdateDateColumn()
   modifiedAt: Date;

@@ -1,20 +1,25 @@
-import { UpdatePasswordDto } from './dto/update-password.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
+import { compare } from 'bcrypt';
+
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { compare } from 'bcrypt';
+
+import {
+  CreateUserDto,
+  UpdatePasswordDto,
+  UpdateUserDto,
+} from './dto/index-user.dto';
 
 export interface UserFindOne {
   id?: string;
   email?: string;
 }
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -22,6 +27,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  // crea un usuario y elimina el campo password
   async create(createUserDto: CreateUserDto): Promise<User> {
     const emailExiste = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -29,71 +35,67 @@ export class UsersService {
     if (emailExiste)
       throw new BadRequestException('El email ya esta registrado');
 
-    const newUser = this.userRepository.create(createUserDto);
-    const user = this.userRepository.save(newUser);
-    delete (await user).password;
-    return user;
+    const nuevoUsuario = this.userRepository.create(createUserDto);
+    const usuario = this.userRepository.save(nuevoUsuario);
+    delete (await usuario).password;
+    return usuario;
   }
-
+  // devuelve todos los usuarios y elimina el campo password
   async findAll(): Promise<User[]> {
-    const users = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.groups', 'userToGroup') // Cargar la relación de groups con la tabla UserToGroup
-      .leftJoinAndSelect('userToGroup.group', 'group') // Cargar los datos completos de la entidad Group
-      .getMany();
+    const usuarios = await this.userRepository.find();
 
-    // Eliminar la contraseña de los usuarios, si es que existe
-    users.forEach((user) => {
-      delete user.password;
+    usuarios.map((usuario) => {
+      delete usuario.password;
     });
 
-    return users;
+    return usuarios;
   }
 
-  async findOne(id: string, userEntity?: User): Promise<User> {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .where({ id: id })
-      .leftJoinAndSelect('user.groups', 'userToGroup') // Cargar la relación 'groups' con la tabla UserToGroup
-      .leftJoinAndSelect('userToGroup.group', 'group') // Cargar los datos completos de la entidad Group
-      .getOne()
+  //busca un usuario por id si coincide con el id del usuario logueado
+  async getOneId(id: string, userEntity?: User): Promise<User> {
+    const usuario = await this.userRepository
+      .findOne({ where: { id: id } })
       .then((u) =>
         !userEntity ? u : !!u && userEntity.id === u.id ? u : null,
       );
 
-    if (!user) {
-      throw new NotFoundException('usuario no encontrado o no autorizado');
-    }
+    if (!usuario)
+      throw new NotFoundException('Usuario no encontrado o no autorizado');
 
-    delete user.password; //elimina la password del usuario
-    return user;
+    return usuario;
   }
 
+  // devuelve el usuario con id y elimina el campo password
+  async findOne(id: string): Promise<User> {
+    const usuario = await this.userRepository.findOne({ where: { id: id } });
+
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
+
+    delete usuario.password;
+
+    return usuario;
+  }
+
+  //actualiza el usuario con id si coincide con el id del usuario logueado
+  //elimina el campo password y devuelve el usuario actualizado
   async update(id: string, updateUserDto: UpdateUserDto, userEntity?: User) {
-    const user = await this.userRepository.findOne({
-      where: { id: id, ...(userEntity ? { id: userEntity.id } : {}) },
-    });
-    if (!user) throw new NotFoundException('Usuario no encontrado');
+    const usuario = await this.getOneId(id, userEntity);
 
-    // copia los datos de updateUserDto a user
-    Object.assign(user, updateUserDto);
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
-    // se extrae el campo password del objeto user
-    const { password, ...passwordRemove } = user;
+    Object.assign(usuario, updateUserDto);
 
-    await this.userRepository.save(user);
+    const { password, ...passwordRemove } = usuario;
+    await this.userRepository.save(usuario);
 
     return passwordRemove;
   }
 
-  //busca un usuario por id si concide con el id del usuario logueado
-  //se elimina el usuario, si no concide me manda unobjeto vacio y no se elimina
+  //elimina el usuario con id si coincide con el id del usuario logueado
   async remove(id: string, userEntity?: User) {
-    const user = await this.userRepository.findOne({
-      where: { id: id, ...(userEntity ? { id: userEntity.id } : {}) },
-    });
+    const usuario = await this.getOneId(id, userEntity);
 
-    if (!user) throw new NotFoundException('Usuario no encontrado');
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
     await this.userRepository.delete(id);
   }
@@ -104,22 +106,21 @@ export class UsersService {
     updatePasswordDto: UpdatePasswordDto,
     userEntity?: User,
   ) {
-    const user = await this.userRepository.findOne({
-      where: { id: id, ...(userEntity ? { id: userEntity.id } : {}) },
-    });
+    const usuario = await this.getOneId(id, userEntity);
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
-    if (!user) throw new NotFoundException('Usuario no encontrado');
+    const validarPassword = await compare(
+      updatePasswordDto.password,
+      usuario.password,
+    );
+    if (!validarPassword)
+      throw new BadRequestException('La contraseñas no coinciden');
 
-    const passValid = await compare(updatePasswordDto.password, user.password);
-    if (!passValid)
-      throw new BadRequestException(
-        'las contrasenas no coinciden o no estas autorizado',
-      );
-
-    user.password = updatePasswordDto.newPassword;
-    await this.userRepository.save(user);
+    usuario.password = updatePasswordDto.newPassword;
+    await this.userRepository.save(usuario);
   }
 
+  //busca un usuario por id o email y elimina el campo password
   async findOneUser(data: UserFindOne) {
     return await this.userRepository
       .createQueryBuilder('user')

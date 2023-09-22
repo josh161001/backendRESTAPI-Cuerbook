@@ -4,10 +4,10 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { UserToEvent } from '../users/entities/userToEvent.entity';
 import { User } from '../users/entities/user.entity';
 import { Event } from './entities/event.entity';
 import { Group } from '../groups/entities/group.entity';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class EventsService {
@@ -16,89 +16,131 @@ export class EventsService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Group)
     private readonly groupRepository: Repository<Group>,
-    @InjectRepository(UserToEvent)
-    private readonly userToEvent: Repository<UserToEvent>,
     @InjectRepository(User)
     private readonly userRespository: Repository<User>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
   ) {}
 
+  // crea un evento y lo asocia al grupo, al usuario y a la categoria
   async create(
-    id: string,
+    groupId: string,
     createEventDto: CreateEventDto,
     user: User,
+    CategoryId: number,
   ): Promise<Event> {
     const group = await this.groupRepository.findOne({
-      where: { id },
+      where: { id: groupId },
     });
 
     if (!group) {
       throw new BadRequestException('El grupo no existe');
     }
 
-    const nameEvent = await this.eventRepository.findOne({
-      where: { name: createEventDto.name },
+    const category = await this.categoryRepository.findOne({
+      where: { id: CategoryId },
     });
 
-    if (nameEvent) {
-      throw new BadRequestException('El evento ya está registrado');
+    if (!category) {
+      throw new BadRequestException('La categoria no existe');
     }
 
-    const event: Event = this.eventRepository.create({
+    const nombreEvento = await this.eventRepository.findOne({
+      where: {
+        name: createEventDto.name,
+      },
+    });
+
+    if (nombreEvento) {
+      throw new BadRequestException('El nombre del evento ya existe');
+    }
+
+    const evento = this.eventRepository.create({
       ...createEventDto,
-      group,
-    });
-
-    const saveEvent: Event = await this.eventRepository.save(event);
-
-    const userToEvent: UserToEvent = this.userToEvent.create({
       user,
-      event: saveEvent,
+      group,
+      Categories: category,
     });
 
-    await this.userToEvent.save(userToEvent);
+    delete evento.group.user.password;
+    delete evento.user.password;
 
-    return saveEvent;
+    const nuevoEvento = await this.eventRepository.save(evento);
+
+    return nuevoEvento;
   }
 
+  // busca todos los eventos y elimina el usuario y el grupo
   async findAll(): Promise<Event[]> {
-    const events = await this.eventRepository
-      .createQueryBuilder('event')
-      .leftJoinAndSelect('event.userToEvents', 'userToEvent')
-      .leftJoinAndSelect('userToEvent.user', 'user')
-      .getMany();
+    const eventos = await this.eventRepository.find();
 
-    return events;
+    eventos.map((evento) => {
+      delete evento.group;
+      delete evento.user;
+    });
+
+    return eventos;
   }
 
-  findOne(id: string): Promise<Event> {
-    const event = this.eventRepository
-      .createQueryBuilder('event')
-      .where({ id: id })
-      .leftJoinAndSelect('event.userToEvents', 'userToEvent')
-      .leftJoinAndSelect('userToEvent.user', 'user')
-      .getOne();
+  // busca el evento por id y el  usuario autenticado
+  async getOneByIdEvent(id: string, userEntity?: User): Promise<Event> {
+    const evento = await this.eventRepository
+      .findOne({
+        where: { id: id },
+      })
+      .then((e) =>
+        !userEntity ? e : !!e && userEntity.id === e.user.id ? e : null,
+      );
 
-    if (!event) {
-      throw new BadRequestException('El evento no existe');
-    }
-    return event;
-  }
-
-  async update(id: string, updateEventDto: UpdateEventDto) {
-    const event = await this.eventRepository.findOne({ where: { id: id } });
-
-    if (!event) {
-      throw new BadRequestException('El evento no existe');
+    if (!evento) {
+      throw new BadRequestException('El evento no existe o no autorizado');
     }
 
-    Object.assign(event, updateEventDto);
+    delete evento.user;
 
-    await this.eventRepository.save(event);
-
-    return event;
+    return evento;
   }
 
-  remove(id: string) {
-    return this.eventRepository.delete(id);
+  // busca el evento por id y el usuario que lo creo
+  async findOne(id: string): Promise<Event> {
+    const evento = await this.eventRepository.findOne({ where: { id: id } });
+
+    if (!evento) {
+      throw new BadRequestException('El evento no existe o no autorizado');
+    }
+
+    delete evento.user;
+
+    return evento;
+  }
+
+  // actualiza el evento por id y el usuario que lo creo
+  async update(id: string, updateEventDto: UpdateEventDto, userEntity?: User) {
+    const evento = await this.getOneByIdEvent(id, userEntity);
+
+    if (!evento) {
+      throw new BadRequestException('El evento no existe o no autorizado');
+    }
+
+    Object.assign(evento, updateEventDto);
+
+    await this.eventRepository.save(evento);
+
+    return evento;
+  }
+
+  async remove(id: string, userEntity?: User) {
+    const evento = await this.getOneByIdEvent(id, userEntity);
+
+    if (!evento) {
+      throw new BadRequestException('El evento no existe o no autorizado');
+    }
+
+    const data = await this.eventRepository.remove(evento);
+
+    return {
+      message: 'Evento eliminado con éxito',
+      data: data,
+    };
   }
 }

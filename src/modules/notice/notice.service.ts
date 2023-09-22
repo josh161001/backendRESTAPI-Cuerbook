@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateNoticeDto } from './dto/update-notice.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
@@ -15,36 +15,49 @@ export class NoticeService {
     private readonly userRespository: Repository<User>,
   ) {}
 
-  async create(id: string, createNoticeDto: CreateNoticeDto): Promise<Notice> {
-    const user = await this.userRespository.findOne({ where: { id } });
-
-    if (!user) {
-      throw new Error('El usuario no existe');
-    }
-
-    const nameNotice = await this.noticeRepository.findOne({
+  async create(createNoticeDto: CreateNoticeDto, user: User): Promise<Notice> {
+    const nombreNotice = await this.noticeRepository.findOne({
       where: { name: createNoticeDto.name },
     });
 
-    if (nameNotice) {
-      throw new Error('La noticia ya está registrada');
-    }
+    if (nombreNotice)
+      throw new NotFoundException('El nombre de la noticia ya existe');
 
-    const notice: Notice = this.noticeRepository.create({
+    const notice = await this.noticeRepository.create({
       ...createNoticeDto,
       user,
     });
 
-    const saveNotice: Notice = await this.noticeRepository.save(notice);
-
-    return saveNotice;
+    delete notice.user.password;
+    return await this.noticeRepository.save(notice);
   }
 
-  findAll(): Promise<Notice[]> {
-    const Notices = this.noticeRepository.find({
+  async findAll(): Promise<Notice[]> {
+    const Notices = await this.noticeRepository.find({
       relations: ['user'],
     });
+
+    Notices.map((notice) => {
+      delete notice.user.password;
+    });
+
     return Notices;
+  }
+
+  async getByUserNotice(id: string, userEntity?: User): Promise<Notice> {
+    const notice = await this.noticeRepository
+      .findOne({ where: { id: id } })
+      .then((n) =>
+        !userEntity ? n : !!n && userEntity.id === n.user.id ? n : null,
+      );
+
+    if (!notice) {
+      throw new NotFoundException('La noticia no existe o no esta autorizado');
+    }
+
+    delete notice.user;
+
+    return notice;
   }
 
   async findOne(id: string): Promise<Notice> {
@@ -54,18 +67,23 @@ export class NoticeService {
     });
 
     if (!notice) {
-      throw new Error('La noticia no existe');
+      throw new NotFoundException('La noticia no existe');
     }
+
+    delete notice.user.password;
+
     return notice;
   }
 
-  async update(id: string, updateNoticeDto: UpdateNoticeDto) {
-    const notice = await this.noticeRepository.findOne({
-      where: { id },
-    });
+  async update(
+    id: string,
+    updateNoticeDto: UpdateNoticeDto,
+    userEntity?: User,
+  ) {
+    const notice = await this.getByUserNotice(id, userEntity);
 
     if (!notice) {
-      throw new Error('La noticia no existe');
+      throw new NotFoundException('La noticia no existe');
     }
 
     Object.assign(notice, updateNoticeDto);
@@ -75,7 +93,13 @@ export class NoticeService {
     return notice;
   }
 
-  remove(id: string) {
-    return this.noticeRepository.delete(id);
+  async remove(id: string, userEntity?: User) {
+    const notice = await this.getByUserNotice(id, userEntity);
+
+    if (!notice) {
+      throw new NotFoundException('La noticia no existe');
+    }
+
+    return this.noticeRepository.remove(notice);
   }
 }

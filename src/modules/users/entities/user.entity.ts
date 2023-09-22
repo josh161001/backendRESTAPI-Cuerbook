@@ -1,7 +1,7 @@
+import { Group } from './../../groups/entities/group.entity';
 import { hash } from 'bcrypt';
-import { UserToGroup } from './userToGroup.entity';
-import { UserToEvent } from './userToEvent.entity';
 import { Notice } from '../../notice/entities/notice.entity';
+import { Event } from '../../events/entities/event.entity';
 import {
   UpdateDateColumn,
   BeforeInsert,
@@ -36,11 +36,11 @@ export class User {
   @Column({ type: 'simple-array', nullable: true })
   roles: string[]; //
 
-  @OneToMany(() => UserToGroup, (userToGroup) => userToGroup.user)
-  groups: UserToGroup[];
+  @OneToMany(() => Group, (groups) => groups.user, { onDelete: 'CASCADE' })
+  groups: Group[];
 
-  @OneToMany(() => UserToEvent, (userToEvent) => userToEvent.user)
-  events: UserToEvent[];
+  @OneToMany(() => Event, (event) => event.user, { onDelete: 'CASCADE' })
+  events: Event[];
 
   @OneToMany(() => Notice, (notice) => notice.user, { onDelete: 'CASCADE' }) //crea la relacion de uno a muchos en la tabla notice
   notice: Notice[];
