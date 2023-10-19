@@ -27,6 +27,9 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty()
+  imagen: string;
+
+  @ApiProperty()
   @IsArray()
   @IsEnum(AppRoles, {
     each: true,

@@ -36,6 +36,9 @@ export class User {
   @Column({ type: 'simple-array', nullable: true })
   roles: string[]; //
 
+  @Column({ nullable: true })
+  token: string;
+
   @OneToMany(() => Group, (groups) => groups.user, { onDelete: 'CASCADE' })
   groups: Group[];
 

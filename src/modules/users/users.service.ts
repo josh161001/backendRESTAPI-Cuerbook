@@ -28,12 +28,32 @@ export class UsersService {
   ) {}
 
   // crea un usuario y elimina el campo password
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
     const emailExiste = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
+
     if (emailExiste)
       throw new BadRequestException('El email ya esta registrado');
+
+    const { name, email, password } = createUserDto;
+
+    const emailRegex = /^l\d{8}@nuevoleon\.tecnm\.mx$/;
+    if (!emailRegex.test(createUserDto.email)) {
+      throw new BadRequestException('Formato incorrecto de email');
+    }
+
+    const trimName = name.trim();
+    const trimEmail = email.trim();
+    const trimPassword = password.trim();
+
+    if (
+      trimName.length === 0 ||
+      trimEmail.length === 0 ||
+      trimPassword.length === 0
+    ) {
+      throw new BadRequestException('Los campos no pueden estar vacíos');
+    }
 
     const nuevoUsuario = this.userRepository.create(createUserDto);
     const usuario = this.userRepository.save(nuevoUsuario);
@@ -79,9 +99,24 @@ export class UsersService {
   //actualiza el usuario con id si coincide con el id del usuario logueado
   //elimina el campo password y devuelve el usuario actualizado
   async update(id: string, updateUserDto: UpdateUserDto, userEntity?: User) {
+    const fs = require('fs');
+
     const usuario = await this.getOneId(id, userEntity);
 
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
+
+    if (updateUserDto.imagen) {
+      const imagenUrl = usuario.imagen;
+      if (imagenUrl) {
+        const imageUrl = imagenUrl.split('/').pop();
+        fs.unlink(`./upload/${imageUrl}`, (error) => {
+          if (error)
+            console.error('Error al eliminar la imagen anterior:', error);
+        });
+      }
+
+      usuario.imagen = updateUserDto.imagen;
+    }
 
     Object.assign(usuario, updateUserDto);
 
@@ -127,5 +162,25 @@ export class UsersService {
       .where(data)
       .addSelect('user.password')
       .getOne();
+  }
+
+  async deleteImage(id: string, userEntity?: User): Promise<void> {
+    const fs = require('fs');
+
+    const usuario = await this.getOneId(id, userEntity);
+
+    if (!usuario || !usuario.imagen) {
+      throw new NotFoundException(
+        'Usuario no encontrado o no tiene una imagen asociada.',
+      );
+    }
+    const imageUrl = usuario.imagen.split('/').pop();
+
+    fs.unlink(`./upload/${imageUrl}`, (error) => {
+      if (error) throw error;
+    });
+
+    usuario.imagen = null;
+    await this.userRepository.save(usuario);
   }
 }

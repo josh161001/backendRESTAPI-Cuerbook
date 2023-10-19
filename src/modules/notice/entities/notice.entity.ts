@@ -2,6 +2,7 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -21,7 +22,7 @@ export class Notice {
   @Column({ nullable: true })
   imagen: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha: Date;
 
   @Column({ type: 'text', nullable: true })
@@ -30,10 +31,10 @@ export class Notice {
   @Column({ default: 0 })
   modified: number;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn()
   modifiedAt: Date;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn()
   createdAt: Date;
 
   @Column({ type: 'bool', default: true })

@@ -28,8 +28,8 @@ export class Event {
   @Column({ nullable: false })
   cupo: number;
 
-  @Column({ nullable: true })
-  fecha: Date | null;
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  fecha: Date;
 
   @Column({ nullable: false })
   lugar: string;

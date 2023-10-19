@@ -7,6 +7,9 @@ import {
   Param,
   Patch,
   Post,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -19,6 +22,9 @@ import { Auth } from 'src/common/decorator/auth.decorator';
 import { AppResource } from 'src/app.roles';
 import { User } from 'src/common/decorator/user.decorator';
 import { User as UserEntity } from './entities/user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { imagenFileFilter, renameImage } from './helpers/upload.helper';
 
 @ApiTags('Users')
 @Controller('users')
@@ -32,27 +38,25 @@ export class UsersController {
   // crea un usuario y crea unas validaciones para el email, nombre y password
   @Auth({ resource: AppResource.users, action: 'create', possession: 'any' })
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const { name, email, password } = createUserDto;
+  @UseInterceptors(
+    FileInterceptor('imagen', {
+      storage: diskStorage({
+        destination: './upload',
+        filename: renameImage,
+      }),
+      fileFilter: imagenFileFilter,
+    }),
+  )
+  async create(
+    @UploadedFile() imagen: Express.Multer.File,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    if (!imagen) throw new BadRequestException('Imagen requerida');
+    const baseUrl = 'http://localhost:5000';
 
-    const emailRegex = /^l\d{8}@nuevoleon\.tecnm\.mx$/;
-    if (!emailRegex.test(createUserDto.email)) {
-      throw new BadRequestException('Formato incorrecto de email');
-    }
+    createUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
-    const trimName = name.trim();
-    const trimEmail = email.trim();
-    const trimPassword = password.trim();
-
-    if (
-      trimName.length === 0 ||
-      trimEmail.length === 0 ||
-      trimPassword.length === 0
-    ) {
-      throw new BadRequestException('Los campos no pueden estar vacíos');
-    }
-
-    const data = await this.usersService.create(createUserDto);
+    const data = await this.usersService.createUser(createUserDto);
     return {
       message: 'Usuario creado',
       data,
@@ -78,19 +82,37 @@ export class UsersController {
 
   // actualiza el usuario con id con el usuario autenticado
   @Auth({ resource: AppResource.users, action: 'update', possession: 'own' })
+  @UseInterceptors(
+    FileInterceptor('imagen', {
+      storage: diskStorage({
+        destination: './upload',
+        filename: renameImage,
+      }),
+      fileFilter: imagenFileFilter,
+    }),
+  )
   @Patch(':id')
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @User() user: UserEntity,
+    @UploadedFile() imagen: Express.Multer.File,
   ) {
     let data;
 
     if (
       this.rolesBuilder.can(user.roles).updateAny(AppResource.users).granted
     ) {
+      if (imagen) {
+        const baseUrl = 'http://localhost:5000';
+        updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      }
       data = await this.usersService.update(id, updateUserDto);
     } else {
+      if (imagen) {
+        const baseUrl = 'http://localhost:5000';
+        updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      }
       const { roles, ...rest } = updateUserDto;
       data = await this.usersService.update(id, rest, user);
     }
@@ -129,11 +151,37 @@ export class UsersController {
   @Auth({ action: 'delete', possession: 'any', resource: AppResource.users })
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
+    const usuario = await this.usersService.findOne(id);
+
+    const imagenUrl = usuario.imagen.split('/').pop();
+
+    const fs = require('fs');
+
+    fs.unlink(`./upload/${imagenUrl}`, (error) => {
+      if (error) throw error;
+    });
+
     const data = await this.usersService.remove(id);
 
     return {
       message: 'Usuario eliminado',
       data,
     };
+  }
+
+  // elimina la imagen del usuario con id con el usuario autenticado
+  @Auth({ action: 'delete', possession: 'own', resource: AppResource.users })
+  @Delete(':id/eliminar-imagen')
+  async deleteImage(@Param('id') id: string, @User() user: UserEntity) {
+    let data;
+
+    if (
+      this.rolesBuilder.can(user.roles).updateAny(AppResource.users).granted
+    ) {
+      data = await this.usersService.deleteImage(id);
+    } else {
+      data = await this.usersService.deleteImage(id, user);
+    }
+    return { message: 'Imagen eliminada correctamente', data };
   }
 }

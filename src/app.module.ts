@@ -13,6 +13,7 @@ import { NoticeModule } from './modules/notice/notice.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { roles } from './app.roles';
 
+//database config
 import {
   DATABASE_HOST,
   DATABASE_NAME,
@@ -21,9 +22,11 @@ import {
   DATABASE_USERNAME,
   PORT,
 } from './config/config.keys';
+
 import { NestFactory } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import InitSeeder from './database/seeds/init.seeder';
+import { MailerModule } from './modules/mailer/mail.module';
 
 @Module({
   imports: [
@@ -54,6 +57,7 @@ import InitSeeder from './database/seeds/init.seeder';
     GroupsModule,
     NoticeModule,
     CategoriesModule,
+    MailerModule,
   ],
   controllers: [],
   providers: [],

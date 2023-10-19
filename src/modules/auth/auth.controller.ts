@@ -36,23 +36,12 @@ export class AuthController {
   }
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  profile(@Req() req) {
-    const user = req.user;
-
-    delete user.password;
+  profile(@User() user: EntityUser) {
+    const { password, ...rest } = user;
 
     return {
       message: 'token activo',
-      user,
-    };
-  }
-  @UseGuards(JwtAuthGuard)
-  @Get('refresh')
-  async tokenRefresh(@Req() req: any) {
-    const data = await this.authService.login(req.user);
-    return {
-      message: 'refresh exitoso',
-      data,
+      rest,
     };
   }
 }

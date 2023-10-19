@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -116,10 +120,23 @@ export class EventsService {
 
   // actualiza el evento por id y el usuario que lo creo
   async update(id: string, updateEventDto: UpdateEventDto, userEntity?: User) {
+    const fs = require('fs');
+
     const evento = await this.getOneByIdEvent(id, userEntity);
 
     if (!evento) {
       throw new BadRequestException('El evento no existe o no autorizado');
+    }
+    if (updateEventDto.imagen) {
+      const imagenUrl = evento.imagen;
+
+      if (imagenUrl) {
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+      }
+
+      evento.imagen = updateEventDto.imagen;
     }
 
     Object.assign(evento, updateEventDto);
@@ -129,6 +146,7 @@ export class EventsService {
     return evento;
   }
 
+  // elimina el evento por id y el usuario que lo creo
   async remove(id: string, userEntity?: User) {
     const evento = await this.getOneByIdEvent(id, userEntity);
 
@@ -142,5 +160,24 @@ export class EventsService {
       message: 'Evento eliminado con éxito',
       data: data,
     };
+  }
+  async deleteImage(id: string, userEntity?: User): Promise<void> {
+    const fs = require('fs');
+
+    const evento = await this.getOneByIdEvent(id, userEntity);
+
+    if (!evento || !evento.imagen) {
+      throw new NotFoundException('Grupo no encontrado o sin imagen');
+    }
+
+    const imageUrl = evento.imagen.split('/').pop();
+
+    fs.unlink(`./upload/${imageUrl}`, (error) => {
+      if (error) throw error;
+    });
+
+    evento.imagen = null;
+
+    await this.groupRepository.save(evento);
   }
 }

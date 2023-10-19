@@ -81,10 +81,25 @@ export class GroupsService {
   }
   // actualiza el grupo con id si coincide con el id del usuario logueado
   async update(id: string, updateGroupDto: UpdateGroupDto, userEntity?: User) {
+    const fs = require('fs');
+
     const group = await this.getByIdUser(id, userEntity);
 
     if (!group) {
-      throw new NotFoundException('Grupo no encontrado o no autorizado');
+      throw new NotFoundException('Grupo no encontrado o sin imagen');
+    }
+
+    if (updateGroupDto.imagen) {
+      const imagenUrl = group.imagen;
+
+      if (imagenUrl) {
+        const imageUrl = imagenUrl.split('/').pop();
+        fs.unlink(`./upload/${imageUrl}`, (error) => {
+          if (error) throw error;
+        });
+      }
+
+      group.imagen = updateGroupDto.imagen;
     }
 
     Object.assign(group, updateGroupDto);
@@ -96,22 +111,37 @@ export class GroupsService {
 
   // elimina el grupo con id si coincide con el id del usuario logueado
   async remove(id: string, userEntity?: User) {
-    try {
-      const group = await this.getByIdUser(id, userEntity);
+    const group = await this.getByIdUser(id, userEntity);
 
-      if (!group) {
-        throw new NotFoundException('Grupo no encontrado o no autorizado');
-      }
-
-      // Asegúrate de eliminar el grupo utilizando remove()
-      const data = await this.groupRepository.remove(group);
-
-      return {
-        message: 'Grupo eliminado con éxito',
-        data,
-      };
-    } catch (error) {
+    if (!group) {
       throw new NotFoundException('Grupo no encontrado o no autorizado');
     }
+
+    const data = await this.groupRepository.remove(group);
+
+    return {
+      message: 'Grupo eliminado con éxito',
+      data,
+    };
+  }
+
+  async deleteImage(id: string, userEntity?: User): Promise<void> {
+    const fs = require('fs');
+
+    const grupo = await this.getByIdUser(id, userEntity);
+
+    if (!grupo || !grupo.imagen) {
+      throw new NotFoundException('Grupo no encontrado o sin imagen');
+    }
+
+    const imageUrl = grupo.imagen.split('/').pop();
+
+    fs.unlink(`./upload/${imageUrl}`, (error) => {
+      if (error) throw error;
+    });
+
+    grupo.imagen = null;
+
+    await this.groupRepository.save(grupo);
   }
 }
