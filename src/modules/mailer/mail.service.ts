@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { MailerService as MailerServices } from '@nestjs-modules/mailer';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdatePasswordUserDto } from './dto/updatePasswordUser.dto';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class MailService {
@@ -37,7 +38,7 @@ export class MailService {
     }
 
     user.token = null;
-    user.password = updatePasswordUser.password;
+    user.password = await hash(updatePasswordUser.password, 10);
 
     await this.userRepository.save(user);
 

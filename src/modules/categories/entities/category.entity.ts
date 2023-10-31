@@ -19,7 +19,9 @@ export class Category {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @OneToMany(() => Event, (event) => event.Categories)
+  @OneToMany(() => Event, (event) => event.Categories, {
+    onDelete: 'SET NULL',
+  })
   event: Event[];
 
   @UpdateDateColumn()

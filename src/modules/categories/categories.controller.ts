@@ -25,13 +25,27 @@ export class CategoriesController {
     possession: 'any',
   })
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+  async create(@Body() createCategoryDto: CreateCategoryDto) {
+    return await this.categoriesService.create(createCategoryDto);
   }
 
   @Get()
-  findAll() {
-    return this.categoriesService.findAll();
+  async findAll() {
+    const data = await this.categoriesService.findAll();
+    return {
+      message: 'Categorias encontradas',
+      data,
+    };
+  }
+
+  @Get('total')
+  async getCategoriastotalCategorias() {
+    const totalCategorias =
+      await this.categoriesService.getCategoriasTotalCategorias();
+    return {
+      message: 'Total de categorias',
+      totalCategorias,
+    };
   }
 
   @Auth({
@@ -40,8 +54,8 @@ export class CategoriesController {
     possession: 'any',
   })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.categoriesService.findOne(id);
   }
 
   @Auth({
@@ -63,7 +77,7 @@ export class CategoriesController {
     possession: 'any',
   })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.categoriesService.remove(id);
   }
 }

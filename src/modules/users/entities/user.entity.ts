@@ -4,8 +4,6 @@ import { Notice } from '../../notice/entities/notice.entity';
 import { Event } from '../../events/entities/event.entity';
 import {
   UpdateDateColumn,
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   Entity,
   PrimaryGeneratedColumn,
@@ -33,7 +31,7 @@ export class User {
   @Column({ type: 'bool', default: true, nullable: false })
   status: boolean;
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column({ type: 'simple-array', nullable: false })
   roles: string[]; //
 
   @Column({ nullable: true })
@@ -48,28 +46,9 @@ export class User {
   @OneToMany(() => Notice, (notice) => notice.user, { onDelete: 'CASCADE' }) //crea la relacion de uno a muchos en la tabla notice
   notice: Notice[];
 
-  @Column({ default: 0, nullable: false })
-  modified: number;
-
   @UpdateDateColumn()
   modifiedAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  async hasPassword() {
-    if (!this.password) {
-      return; // si no hay contraseña no hace nada
-    }
-
-    this.password = await hash(this.password, 10);
-
-    if (typeof this.modified !== 'number') {
-      this.modified = 0;
-    }
-
-    this.modified++; // Incrementa el contador de modificacion
-  }
 }

@@ -30,6 +30,9 @@ export class CreateUserDto {
   imagen: string;
 
   @ApiProperty()
+  status: boolean;
+
+  @ApiProperty()
   @IsArray()
   @IsEnum(AppRoles, {
     each: true,

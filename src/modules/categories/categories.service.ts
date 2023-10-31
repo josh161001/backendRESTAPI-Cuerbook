@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './entities/category.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class CategoriesService {
@@ -18,7 +17,7 @@ export class CategoriesService {
     });
 
     if (nombreCategoria) {
-      throw new Error('La categoria ya existe');
+      throw new BadRequestException('La categoria ya existe');
     }
 
     const categoria = this.categoryRepository.create(createCategoryDto);
@@ -27,7 +26,14 @@ export class CategoriesService {
   }
 
   async findAll(): Promise<Category[]> {
-    return await this.categoryRepository.find();
+    const categorias = await this.categoryRepository.find();
+
+    return categorias;
+  }
+
+  async getCategoriasTotalCategorias(): Promise<number> {
+    const totalCategorias = await this.categoryRepository.count();
+    return totalCategorias;
   }
 
   async findOne(id: number): Promise<Category> {

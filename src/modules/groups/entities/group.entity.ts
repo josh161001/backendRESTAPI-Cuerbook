@@ -8,7 +8,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -28,19 +27,20 @@ export class Group {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ default: 0 })
-  modified: number;
-
   @Column({ type: 'bool', default: true, nullable: false })
   status: boolean;
 
   @ManyToOne(() => User, (user) => user.groups, {
     eager: true,
+    onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @OneToMany(() => Event, (event) => event.group)
+  @OneToMany(() => Event, (event) => event.group, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   events: Event[];
 
   @UpdateDateColumn()
@@ -48,13 +48,4 @@ export class Group {
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  async updateModified() {
-    if (typeof this.modified !== 'number') {
-      this.modified = 0;
-    }
-    this.modified++; // Incrementa el contador de modificacion
-  }
 }

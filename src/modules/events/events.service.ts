@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -76,22 +72,47 @@ export class EventsService {
 
   // busca todos los eventos y elimina el usuario y el grupo
   async findAll(): Promise<Event[]> {
-    const eventos = await this.eventRepository.find();
+    const eventos = await this.eventRepository.find({
+      relations: ['Categories', 'user'],
+    });
 
     eventos.map((evento) => {
       delete evento.group;
-      delete evento.user;
+      delete evento.user.password;
     });
 
     return eventos;
   }
 
+  async eventosProximos(): Promise<Event[]> {
+    const fecha = new Date();
+
+    const eventos = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.Categories', 'Categories')
+      .leftJoinAndSelect('event.user', 'user')
+      .where('event.fecha >= :fecha', { fecha: fecha })
+      .orderBy('event.fecha', 'ASC')
+      .take(3)
+      .getMany();
+
+    eventos.map((evento) => {
+      delete evento.user.password;
+    });
+
+    return eventos;
+  }
+
+  // devuelve el total de eventos
+  async getTotalEventos(): Promise<number> {
+    const totalEventos = await this.eventRepository.count();
+    return totalEventos;
+  }
+
   // busca el evento por id y el  usuario autenticado
   async getOneByIdEvent(id: string, userEntity?: User): Promise<Event> {
     const evento = await this.eventRepository
-      .findOne({
-        where: { id: id },
-      })
+      .findOne({ where: { id: id }, relations: ['Categories'] })
       .then((e) =>
         !userEntity ? e : !!e && userEntity.id === e.user.id ? e : null,
       );
@@ -157,27 +178,8 @@ export class EventsService {
     const data = await this.eventRepository.remove(evento);
 
     return {
-      message: 'Evento eliminado con éxito',
-      data: data,
+      message: 'Evento eliminado',
+      data,
     };
-  }
-  async deleteImage(id: string, userEntity?: User): Promise<void> {
-    const fs = require('fs');
-
-    const evento = await this.getOneByIdEvent(id, userEntity);
-
-    if (!evento || !evento.imagen) {
-      throw new NotFoundException('Grupo no encontrado o sin imagen');
-    }
-
-    const imageUrl = evento.imagen.split('/').pop();
-
-    fs.unlink(`./upload/${imageUrl}`, (error) => {
-      if (error) throw error;
-    });
-
-    evento.imagen = null;
-
-    await this.groupRepository.save(evento);
   }
 }

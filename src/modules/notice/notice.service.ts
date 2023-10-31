@@ -44,6 +44,12 @@ export class NoticeService {
     return Notices;
   }
 
+  async getTotalNotices(): Promise<number> {
+    const totalNotices = await this.noticeRepository.count();
+
+    return totalNotices;
+  }
+
   async getByUserNotice(id: string, userEntity?: User): Promise<Notice> {
     const notice = await this.noticeRepository
       .findOne({ where: { id: id } })
@@ -100,6 +106,11 @@ export class NoticeService {
       throw new NotFoundException('La noticia no existe');
     }
 
-    return this.noticeRepository.remove(notice);
+    const data = await this.noticeRepository.remove(notice);
+
+    return {
+      message: 'Noticia eliminada con éxito',
+      data: data,
+    };
   }
 }

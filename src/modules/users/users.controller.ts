@@ -25,6 +25,8 @@ import { User as UserEntity } from './entities/user.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { imagenFileFilter, renameImage } from './helpers/upload.helper';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @ApiTags('Users')
 @Controller('users')
@@ -73,6 +75,15 @@ export class UsersController {
     };
   }
 
+  @Get('total')
+  async getUserCount() {
+    const usuariosTotal = await this.usersService.getTotalUsers();
+
+    return {
+      message: 'Numero total de usuarios',
+      usuariosTotal,
+    };
+  }
   // devuelve el usuario con id
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -99,19 +110,47 @@ export class UsersController {
     @UploadedFile() imagen: Express.Multer.File,
   ) {
     let data;
+    const fs = require('fs');
 
     if (
       this.rolesBuilder.can(user.roles).updateAny(AppResource.users).granted
     ) {
       if (imagen) {
+        const usuario = await this.usersService.findOne(id);
+
+        const imagenUrl = usuario.imagen.split('/').pop();
+
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+
         const baseUrl = 'http://localhost:5000';
         updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const user = await this.usersService.findOne(id);
+
+        if (user && user.imagen) {
+          updateUserDto.imagen = user.imagen;
+        }
       }
       data = await this.usersService.update(id, updateUserDto);
     } else {
       if (imagen) {
+        const usuario = await this.usersService.findOne(id);
+
+        const imagenUrl = usuario.imagen.split('/').pop();
+
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+
         const baseUrl = 'http://localhost:5000';
         updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const user = await this.usersService.findOne(id);
+        if (user && user.imagen) {
+          updateUserDto.imagen = user.imagen;
+        }
       }
       const { roles, ...rest } = updateUserDto;
       data = await this.usersService.update(id, rest, user);
@@ -147,7 +186,6 @@ export class UsersController {
     };
   }
 
-  // elimina el usuario con id con el usuario autenticado
   @Auth({ action: 'delete', possession: 'any', resource: AppResource.users })
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
@@ -167,21 +205,5 @@ export class UsersController {
       message: 'Usuario eliminado',
       data,
     };
-  }
-
-  // elimina la imagen del usuario con id con el usuario autenticado
-  @Auth({ action: 'delete', possession: 'own', resource: AppResource.users })
-  @Delete(':id/eliminar-imagen')
-  async deleteImage(@Param('id') id: string, @User() user: UserEntity) {
-    let data;
-
-    if (
-      this.rolesBuilder.can(user.roles).updateAny(AppResource.users).granted
-    ) {
-      data = await this.usersService.deleteImage(id);
-    } else {
-      data = await this.usersService.deleteImage(id, user);
-    }
-    return { message: 'Imagen eliminada correctamente', data };
   }
 }

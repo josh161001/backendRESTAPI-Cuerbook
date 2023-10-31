@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { ApiTags } from '@nestjs/swagger';
@@ -17,15 +18,18 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 
 import { EventsService } from './events.service';
-
 import { User as UserEntity } from '../users/entities/user.entity';
-import { Auth } from 'src/common/decorator/auth.decorator';
 import { User } from 'src/common/decorator/user.decorator';
+
+import { Auth } from 'src/common/decorator/auth.decorator';
+
 import { AppResource } from 'src/app.roles';
 import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
+
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { imagenFileFilter, renameImage } from '../users/helpers/upload.helper';
+import e from 'express';
 
 @ApiTags('events')
 @Controller('events')
@@ -70,8 +74,6 @@ export class EventsController {
       categoryId,
     );
 
-    console.log(data);
-
     return {
       message: 'Evento creado con éxito',
       data: data,
@@ -87,6 +89,27 @@ export class EventsController {
       data: data,
     };
   }
+
+  @Get('/proximos')
+  async getEventsProximos() {
+    const data = await this.eventsService.eventosProximos();
+
+    return {
+      message: 'Lista de eventos proximos',
+      data: data,
+    };
+  }
+
+  @Get('total')
+  async getEventCount() {
+    const totalEventos = await this.eventsService.getTotalEventos();
+
+    return {
+      message: 'Total de eventos',
+      totalEventos,
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.eventsService.findOne(id);
@@ -112,26 +135,46 @@ export class EventsController {
     }),
   )
   @Patch(':id')
-  update(
+  async update(
     @UploadedFile() imagen: Express.Multer.File,
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
-    @User() user?: UserEntity,
+    @User() user: UserEntity,
   ) {
+    const fs = require('fs');
+
     let data;
 
     if (
       this.rolesBuilder.can(user.roles).updateAny(AppResource.events).granted
     ) {
       if (imagen) {
+        const evento = await this.eventsService.findOne(id);
+
+        const imagenUrl = evento.imagen.split('/').pop();
+
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+
         const baseUrl = 'http://localhost:5000';
         updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const evento = await this.eventsService.findOne(id);
+        if (evento && evento.imagen) {
+          updateEventDto.imagen = evento.imagen;
+        }
       }
       data = this.eventsService.update(id, updateEventDto);
     } else {
       if (imagen) {
         const baseUrl = 'http://localhost:5000';
         updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const evento = await this.eventsService.findOne(id);
+        if (evento && evento.imagen) {
+          updateEventDto.imagen = evento.imagen;
+        }
       }
       data = this.eventsService.update(id, updateEventDto, user);
     }
@@ -149,13 +192,13 @@ export class EventsController {
     possession: 'own',
   })
   @Delete(':id')
-  async remove(@Param('id') id: string, user?: UserEntity) {
+  async remove(@Param('id') id: string, @User() user: UserEntity) {
     const fs = require('fs');
 
     const evento = await this.eventsService.getOneByIdEvent(id, user);
 
     if (!evento) {
-      throw new BadRequestException('El evento no existe o no autorizado');
+      throw new NotFoundException('El evento no existe o no autorizado');
     }
 
     const imagenUrl = evento.imagen.split('/').pop();
@@ -169,35 +212,13 @@ export class EventsController {
     if (
       this.rolesBuilder.can(user.roles).deleteAny(AppResource.events).granted
     ) {
-      data = this.eventsService.remove(id);
+      data = await this.eventsService.remove(id);
     } else {
-      data = this.eventsService.remove(id, user);
+      data = await this.eventsService.remove(id, user);
     }
 
     return {
       message: 'Evento eliminado con éxito',
-      data,
-    };
-  }
-
-  @Auth({
-    resource: AppResource.events,
-    action: 'delete',
-    possession: 'own',
-  })
-  @Delete(':id/eliminar-imagen')
-  async deleteImagen(@Param('id') id: string, @User() user?: UserEntity) {
-    let data;
-
-    if (
-      this.rolesBuilder.can(user.roles).deleteAny(AppResource.events).granted
-    ) {
-      data = await this.eventsService.deleteImage(id);
-    } else {
-      data = await this.eventsService.deleteImage(id, user);
-    }
-    return {
-      message: 'Imagen eliminada correctamente',
       data,
     };
   }

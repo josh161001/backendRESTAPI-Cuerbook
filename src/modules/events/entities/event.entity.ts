@@ -1,14 +1,11 @@
 import { Category } from 'src/modules/categories/entities/category.entity';
 import { Group } from '../../groups/entities/group.entity';
 import {
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -37,20 +34,19 @@ export class Event {
   @Column({ type: 'text', nullable: false })
   description: string;
 
-  @Column({ default: 0 })
-  modified: number;
-
   @Column({ type: 'bool', default: true })
   status: boolean;
 
   @ManyToOne(() => Group, (group) => group.events, {
+    eager: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'groupId' })
   group: Group;
 
   @ManyToOne(() => Category, (category) => category.event, {
-    onDelete: 'CASCADE',
+    eager: true,
+    onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'categoryId' })
   Categories: Category;
@@ -66,13 +62,4 @@ export class Event {
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  async updateModified() {
-    if (typeof this.modified !== 'number') {
-      this.modified = 0;
-    }
-    this.modified++; // Incrementa el contador de modificacion
-  }
 }

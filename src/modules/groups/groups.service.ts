@@ -50,10 +50,16 @@ export class GroupsService {
     return grupos;
   }
 
+  async getTotalGrupos(): Promise<number> {
+    const totalGrupos = await this.groupRepository.count();
+
+    return totalGrupos;
+  }
+
   // devuelve el grupo con id si coincide con el id del usuario logueado
   async getByIdUser(id: string, userEntity?: User): Promise<Group> {
     const grupo = await this.groupRepository
-      .findOne({ where: { id: id } })
+      .findOne({ where: { id: id }, relations: ['user'] })
       .then((g) =>
         !userEntity ? g : !!g && userEntity.id === g.user.id ? g : null,
       );
@@ -81,25 +87,10 @@ export class GroupsService {
   }
   // actualiza el grupo con id si coincide con el id del usuario logueado
   async update(id: string, updateGroupDto: UpdateGroupDto, userEntity?: User) {
-    const fs = require('fs');
-
     const group = await this.getByIdUser(id, userEntity);
 
     if (!group) {
       throw new NotFoundException('Grupo no encontrado o sin imagen');
-    }
-
-    if (updateGroupDto.imagen) {
-      const imagenUrl = group.imagen;
-
-      if (imagenUrl) {
-        const imageUrl = imagenUrl.split('/').pop();
-        fs.unlink(`./upload/${imageUrl}`, (error) => {
-          if (error) throw error;
-        });
-      }
-
-      group.imagen = updateGroupDto.imagen;
     }
 
     Object.assign(group, updateGroupDto);
@@ -123,25 +114,5 @@ export class GroupsService {
       message: 'Grupo eliminado con éxito',
       data,
     };
-  }
-
-  async deleteImage(id: string, userEntity?: User): Promise<void> {
-    const fs = require('fs');
-
-    const grupo = await this.getByIdUser(id, userEntity);
-
-    if (!grupo || !grupo.imagen) {
-      throw new NotFoundException('Grupo no encontrado o sin imagen');
-    }
-
-    const imageUrl = grupo.imagen.split('/').pop();
-
-    fs.unlink(`./upload/${imageUrl}`, (error) => {
-      if (error) throw error;
-    });
-
-    grupo.imagen = null;
-
-    await this.groupRepository.save(grupo);
   }
 }

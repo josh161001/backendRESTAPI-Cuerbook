@@ -1,3 +1,4 @@
+import { Category } from './../../categories/entities/category.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsNumber, IsString } from 'class-validator';
 
@@ -29,4 +30,7 @@ export class CreateEventDto {
   @ApiProperty()
   @IsNumber()
   cupo: number;
+
+  @ApiProperty()
+  status: boolean;
 }

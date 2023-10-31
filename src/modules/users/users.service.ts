@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import { compare } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 
 import {
   BadRequestException,
@@ -56,13 +56,20 @@ export class UsersService {
     }
 
     const nuevoUsuario = this.userRepository.create(createUserDto);
-    const usuario = this.userRepository.save(nuevoUsuario);
+
+    const usuario = this.userRepository.save({
+      ...nuevoUsuario,
+      password: await hash(createUserDto.password, 10),
+    });
+
     delete (await usuario).password;
     return usuario;
   }
   // devuelve todos los usuarios y elimina el campo password
   async findAll(): Promise<User[]> {
-    const usuarios = await this.userRepository.find();
+    const usuarios = await this.userRepository.find({
+      relations: ['groups'],
+    });
 
     usuarios.map((usuario) => {
       delete usuario.password;
@@ -71,10 +78,14 @@ export class UsersService {
     return usuarios;
   }
 
+  async getTotalUsers(): Promise<number> {
+    const totalUsuarios = await this.userRepository.count();
+    return totalUsuarios;
+  }
   //busca un usuario por id si coincide con el id del usuario logueado
   async getOneId(id: string, userEntity?: User): Promise<User> {
     const usuario = await this.userRepository
-      .findOne({ where: { id: id } })
+      .findOne({ where: { id: id }, relations: ['groups'] })
       .then((u) =>
         !userEntity ? u : !!u && userEntity.id === u.id ? u : null,
       );
@@ -87,7 +98,10 @@ export class UsersService {
 
   // devuelve el usuario con id y elimina el campo password
   async findOne(id: string): Promise<User> {
-    const usuario = await this.userRepository.findOne({ where: { id: id } });
+    const usuario = await this.userRepository.findOne({
+      where: { id: id },
+      relations: ['groups'],
+    });
 
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
@@ -99,24 +113,9 @@ export class UsersService {
   //actualiza el usuario con id si coincide con el id del usuario logueado
   //elimina el campo password y devuelve el usuario actualizado
   async update(id: string, updateUserDto: UpdateUserDto, userEntity?: User) {
-    const fs = require('fs');
-
     const usuario = await this.getOneId(id, userEntity);
 
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
-
-    if (updateUserDto.imagen) {
-      const imagenUrl = usuario.imagen;
-      if (imagenUrl) {
-        const imageUrl = imagenUrl.split('/').pop();
-        fs.unlink(`./upload/${imageUrl}`, (error) => {
-          if (error)
-            console.error('Error al eliminar la imagen anterior:', error);
-        });
-      }
-
-      usuario.imagen = updateUserDto.imagen;
-    }
 
     Object.assign(usuario, updateUserDto);
 
@@ -151,7 +150,7 @@ export class UsersService {
     if (!validarPassword)
       throw new BadRequestException('La contraseñas no coinciden');
 
-    usuario.password = updatePasswordDto.newPassword;
+    usuario.password = await hash(updatePasswordDto.newPassword, 10);
     await this.userRepository.save(usuario);
   }
 
@@ -162,25 +161,5 @@ export class UsersService {
       .where(data)
       .addSelect('user.password')
       .getOne();
-  }
-
-  async deleteImage(id: string, userEntity?: User): Promise<void> {
-    const fs = require('fs');
-
-    const usuario = await this.getOneId(id, userEntity);
-
-    if (!usuario || !usuario.imagen) {
-      throw new NotFoundException(
-        'Usuario no encontrado o no tiene una imagen asociada.',
-      );
-    }
-    const imageUrl = usuario.imagen.split('/').pop();
-
-    fs.unlink(`./upload/${imageUrl}`, (error) => {
-      if (error) throw error;
-    });
-
-    usuario.imagen = null;
-    await this.userRepository.save(usuario);
   }
 }

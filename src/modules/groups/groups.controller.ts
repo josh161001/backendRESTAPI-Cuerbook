@@ -9,19 +9,23 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 // entities
-import { User as UserEntity } from '../users/entities/user.entity';
 
-import { CreateGroupDto } from './dto/create-group.dto';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { User } from 'src/common/decorator/user.decorator';
 
 import { ApiTags } from '@nestjs/swagger';
+
+import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupsService } from './groups.service';
-import { Auth } from 'src/common/decorator/auth.decorator';
+
+import { User as UserEntity } from '../users/entities/user.entity';
 import { AppResource } from 'src/app.roles';
 import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
-import { User } from 'src/common/decorator/user.decorator';
+
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { imagenFileFilter, renameImage } from '../users/helpers/upload.helper';
@@ -78,6 +82,15 @@ export class GroupsController {
       data: data,
     };
   }
+  @Get('total')
+  async getGruposCount() {
+    const totalGrupos = await this.groupsService.getTotalGrupos();
+
+    return {
+      message: 'Total de grupos',
+      totalGrupos,
+    };
+  }
 
   // devuelve el grupo con id
   @Get(':id')
@@ -112,20 +125,46 @@ export class GroupsController {
     @User() user: UserEntity,
     @UploadedFile() imagen: Express.Multer.File,
   ) {
+    const fs = require('fs');
+
     let data;
 
     if (
       this.rolesBuilder.can(user.roles).updateAny(AppResource.groups).granted
     ) {
       if (imagen) {
+        const grupo = await this.groupsService.findOne(id);
+        const imagenUrl = grupo.imagen.split('/').pop();
+
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+
         const baseUrl = 'http://localhost:5000';
         updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const grupo = await this.groupsService.findOne(id);
+
+        if (grupo && grupo.imagen) {
+          updateGroupDto.imagen = grupo.imagen;
+        }
       }
       data = await this.groupsService.update(id, updateGroupDto);
     } else {
       if (imagen) {
+        const grupo = await this.groupsService.findOne(id);
+        const imagenUrl = grupo.imagen.split('/').pop();
+
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
         const baseUrl = 'http://localhost:5000';
         updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const grupo = await this.groupsService.findOne(id);
+        if (grupo && grupo.imagen) {
+          updateGroupDto.imagen = grupo.imagen;
+        }
       }
       data = await this.groupsService.update(id, updateGroupDto, user);
     }
@@ -149,7 +188,7 @@ export class GroupsController {
     const grupo = await this.groupsService.getByIdUser(id, user);
 
     if (!grupo) {
-      throw new BadRequestException('Grupo no encontrado o no autorizado');
+      throw new NotFoundException('Grupo no encontrado o no autorizado');
     }
 
     const imagenUrl = grupo.imagen.split('/').pop();
@@ -169,28 +208,6 @@ export class GroupsController {
     }
     return {
       message: 'Grupo eliminado con éxito',
-      data,
-    };
-  }
-
-  @Auth({
-    resource: AppResource.groups,
-    action: 'delete',
-    possession: 'own',
-  })
-  @Delete(':id/eliminar-imagen')
-  async deleteImagen(@Param('id') id: string, @User() user?: UserEntity) {
-    let data;
-
-    if (
-      this.rolesBuilder.can(user.roles).deleteAny(AppResource.groups).granted
-    ) {
-      data = await this.groupsService.deleteImage(id);
-    } else {
-      data = await this.groupsService.deleteImage(id, user);
-    }
-    return {
-      message: 'Imagen eliminada correctamente',
       data,
     };
   }
