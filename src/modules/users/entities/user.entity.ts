@@ -31,6 +31,9 @@ export class User {
   @Column({ type: 'bool', default: true, nullable: false })
   status: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
   @Column({ type: 'simple-array', nullable: false })
   roles: string[]; //
 

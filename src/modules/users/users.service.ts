@@ -67,9 +67,7 @@ export class UsersService {
   }
   // devuelve todos los usuarios y elimina el campo password
   async findAll(): Promise<User[]> {
-    const usuarios = await this.userRepository.find({
-      relations: ['groups'],
-    });
+    const usuarios = await this.userRepository.find();
 
     usuarios.map((usuario) => {
       delete usuario.password;
@@ -98,12 +96,13 @@ export class UsersService {
 
   // devuelve el usuario con id y elimina el campo password
   async findOne(id: string): Promise<User> {
-    const usuario = await this.userRepository.findOne({
-      where: { id: id },
-      relations: ['groups'],
-    });
-
-    if (!usuario) throw new NotFoundException('Usuario no encontrado');
+    const usuario = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.groups', 'groups')
+      .leftJoin('groups.user', 'groupsUser')
+      .addSelect(['groupsUser.name', 'groupsUser.imagen'])
+      .where('user.id = :id', { id: id })
+      .getOne();
 
     delete usuario.password;
 

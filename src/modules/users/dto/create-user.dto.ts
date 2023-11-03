@@ -30,6 +30,9 @@ export class CreateUserDto {
   imagen: string;
 
   @ApiProperty()
+  description: string;
+
+  @ApiProperty()
   status: boolean;
 
   @ApiProperty()

@@ -44,6 +44,22 @@ export class NoticeService {
     return Notices;
   }
 
+  async findNoticias(): Promise<Notice[]> {
+    const Notices = await this.noticeRepository.find({
+      relations: ['user'],
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 3,
+    });
+
+    Notices.map((notice) => {
+      delete notice.user.password;
+    });
+
+    return Notices;
+  }
+
   async getTotalNotices(): Promise<number> {
     const totalNotices = await this.noticeRepository.count();
 

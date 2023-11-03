@@ -72,14 +72,12 @@ export class EventsService {
 
   // busca todos los eventos y elimina el usuario y el grupo
   async findAll(): Promise<Event[]> {
-    const eventos = await this.eventRepository.find({
-      relations: ['Categories', 'user'],
-    });
-
-    eventos.map((evento) => {
-      delete evento.group;
-      delete evento.user.password;
-    });
+    const eventos = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.Categories', 'Categories')
+      .leftJoin('event.user', 'user')
+      .addSelect(['user.id', 'user.name'])
+      .getMany();
 
     return eventos;
   }
@@ -128,13 +126,18 @@ export class EventsService {
 
   // busca el evento por id y el usuario que lo creo
   async findOne(id: string): Promise<Event> {
-    const evento = await this.eventRepository.findOne({ where: { id: id } });
+    const evento = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.Categories', 'Categories')
+      .leftJoinAndSelect('event.user', 'user')
+      .where('event.id = :id', { id: id })
+      .getOne();
 
     if (!evento) {
-      throw new BadRequestException('El evento no existe o no autorizado');
+      throw new BadRequestException('El evento no existe');
     }
 
-    delete evento.user;
+    delete evento.user.password;
 
     return evento;
   }

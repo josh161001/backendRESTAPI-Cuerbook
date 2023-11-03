@@ -39,17 +39,12 @@ export class GroupsService {
 
   // devuelve todos los grupos
   async findAll(): Promise<Group[]> {
-    const grupos = await this.groupRepository.find({
-      relations: ['user'],
-    });
+    const grupos = await this.groupRepository.find();
 
-    grupos.map((group) => {
-      delete group.user.password;
-    });
+    grupos.map((grupo) => delete grupo.user.password);
 
     return grupos;
   }
-
   async getTotalGrupos(): Promise<number> {
     const totalGrupos = await this.groupRepository.count();
 
@@ -59,7 +54,7 @@ export class GroupsService {
   // devuelve el grupo con id si coincide con el id del usuario logueado
   async getByIdUser(id: string, userEntity?: User): Promise<Group> {
     const grupo = await this.groupRepository
-      .findOne({ where: { id: id }, relations: ['user'] })
+      .findOne({ where: { id: id } })
       .then((g) =>
         !userEntity ? g : !!g && userEntity.id === g.user.id ? g : null,
       );
@@ -67,21 +62,21 @@ export class GroupsService {
     if (!grupo)
       throw new NotFoundException('Grupo no encontrado o no autorizado');
 
-    delete grupo.user;
+    delete grupo.user.password;
 
     return grupo;
   }
 
   // devuelve el grupo con id y elimina el campo password del usuario asociado
   async findOne(id: string): Promise<Group> {
-    const grupo = await this.groupRepository.findOne({
-      where: { id: id },
-      relations: ['user'],
-    });
-
-    if (!grupo) throw new NotFoundException('Grupo no encontrado');
-
-    delete grupo.user.password;
+    const grupo = await this.groupRepository
+      .createQueryBuilder('group')
+      .leftJoinAndSelect('group.events', 'events')
+      .leftJoinAndSelect('events.Categories', 'categories')
+      .leftJoin('events.user', 'user')
+      .addSelect(['user.name'])
+      .where('group.id = :id', { id: id })
+      .getOne();
 
     return grupo;
   }

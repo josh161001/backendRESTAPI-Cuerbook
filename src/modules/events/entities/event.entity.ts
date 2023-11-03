@@ -53,6 +53,7 @@ export class Event {
 
   @ManyToOne(() => User, (user) => user.events, {
     eager: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
   user: User;

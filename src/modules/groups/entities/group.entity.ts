@@ -32,7 +32,7 @@ export class Group {
 
   @ManyToOne(() => User, (user) => user.groups, {
     eager: true,
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
   user: User;

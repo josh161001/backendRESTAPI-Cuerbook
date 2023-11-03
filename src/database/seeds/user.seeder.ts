@@ -12,6 +12,7 @@ export default class UserSeeder implements Seeder {
       name: 'admin',
       email: 'l19480829@nuevoleon.tecnm.mx',
       password: await hash('161001', 10),
+      description: 'Administrador del sistema',
       imagen: 'http://localhost:5000/upload/admin.jpg',
       roles: [AppRoles.admin], //
       status: true,
