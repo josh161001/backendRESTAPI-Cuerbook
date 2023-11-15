@@ -1,5 +1,4 @@
 import { Group } from './../../groups/entities/group.entity';
-import { hash } from 'bcrypt';
 import { Notice } from '../../notice/entities/notice.entity';
 import { Event } from '../../events/entities/event.entity';
 import {

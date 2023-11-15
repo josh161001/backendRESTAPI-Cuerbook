@@ -29,6 +29,7 @@ import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { imagenFileFilter, renameImage } from '../users/helpers/upload.helper';
+import { get } from 'http';
 
 @ApiTags('groups')
 @Controller('groups')
@@ -82,6 +83,17 @@ export class GroupsController {
       data: data,
     };
   }
+
+  @Get('populares')
+  async getGruposPopulares() {
+    const data = await this.groupsService.getPopulares();
+
+    return {
+      message: 'Grupos obtenidos con éxito',
+      data: data,
+    };
+  }
+
   @Get('total')
   async getGruposCount() {
     const totalGrupos = await this.groupsService.getTotalGrupos();

@@ -96,7 +96,7 @@ export class MailService {
         .content a {
           display: inline-block;
           padding: 10px 20px;
-          background-color: red;
+          background-color: #1B396A;
           color: #fff;
           text-decoration: none;
           border-radius: 5px;
@@ -116,7 +116,7 @@ export class MailService {
         <div class="content">
           <p>Hola <strong>${user.name}</strong>,</p>
           <p>Hemos recibido una solicitud para restablecer tu contraseña. Si no lo has solicitado
-          ignora este mensaje. De lo contrario Haz clic en el siguiente botón para continuar:</p>
+          ignora este mensaje. De lo contrario haz clic en el siguiente botón para continuar:</p>
           <a href="${resetLink}">Restablecer Contraseña</a>
         </div>
         <div class="footer">

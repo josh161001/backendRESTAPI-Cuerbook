@@ -4,21 +4,30 @@ import { MailerController } from './mailer.controller';
 import { MailerModule as MailerModules } from '@nestjs-modules/mailer';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/modules/users/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
+import {
+  EMAIL_HOST,
+  USER_EMAIL,
+  USER_EMAIL_PASSWORD,
+} from 'src/config/config.keys';
 
 @Module({
   imports: [
-    MailerModules.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        secure: false,
-        auth: {
-          user: 'estrella161610@gmail.com',
-          pass: 'fzgw xsqy ucwf eenv ',
+    MailerModules.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        transport: {
+          host: config.get<string>(EMAIL_HOST),
+          secure: false,
+          auth: {
+            user: config.get<string>(USER_EMAIL),
+            pass: config.get<string>(USER_EMAIL_PASSWORD),
+          },
         },
-      },
-      defaults: {
-        from: '"admin@cuerbook.com" <admin@admin.cuerbook.com>',
-      },
+        defaults: {
+          from: '"admin@cuerbook.com" <admin@admin.cuerbook.com>',
+        },
+      }),
     }),
     TypeOrmModule.forFeature([User]),
   ],

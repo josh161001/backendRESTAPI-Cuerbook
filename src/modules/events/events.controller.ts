@@ -100,6 +100,16 @@ export class EventsController {
     };
   }
 
+  @Get('/pasados')
+  async getEventsPasados() {
+    const data = await this.eventsService.eventosPasados();
+
+    return {
+      message: 'Lista de eventos pasados',
+      data: data,
+    };
+  }
+
   @Get('total')
   async getEventCount() {
     const totalEventos = await this.eventsService.getTotalEventos();

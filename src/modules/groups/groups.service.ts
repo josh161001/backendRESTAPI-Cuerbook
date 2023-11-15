@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { User } from '../users/entities/user.entity';
 import { Group } from './entities/group.entity';
+import { get } from 'http';
+import { take } from 'rxjs';
 
 @Injectable()
 export class GroupsService {
@@ -65,6 +67,17 @@ export class GroupsService {
     delete grupo.user.password;
 
     return grupo;
+  }
+
+  async getPopulares(): Promise<Group[]> {
+    const grupos = await this.groupRepository
+      .createQueryBuilder('group')
+      .leftJoin('group.user', 'user')
+      .addSelect(['user.name', 'user.imagen'])
+      .take(3)
+      .getMany();
+
+    return grupos;
   }
 
   // devuelve el grupo con id y elimina el campo password del usuario asociado

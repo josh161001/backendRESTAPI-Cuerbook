@@ -88,15 +88,30 @@ export class EventsService {
     const eventos = await this.eventRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.Categories', 'Categories')
-      .leftJoinAndSelect('event.user', 'user')
+      .leftJoin('event.user', 'user')
+      .addSelect(['user.id', 'user.name'])
       .where('event.fecha >= :fecha', { fecha: fecha })
       .orderBy('event.fecha', 'ASC')
-      .take(3)
       .getMany();
 
     eventos.map((evento) => {
       delete evento.user.password;
     });
+
+    return eventos;
+  }
+
+  async eventosPasados(): Promise<Event[]> {
+    const fecha = new Date();
+
+    const eventos = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.Categories', 'Categories')
+      .leftJoin('event.user', 'user')
+      .addSelect(['user.id', 'user.name'])
+      .where('event.fecha < :fecha', { fecha: fecha })
+      .orderBy('event.fecha', 'DESC')
+      .getMany();
 
     return eventos;
   }
