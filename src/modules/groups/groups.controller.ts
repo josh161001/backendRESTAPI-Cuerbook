@@ -29,7 +29,6 @@ import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { imagenFileFilter, renameImage } from '../users/helpers/upload.helper';
-import { get } from 'http';
 
 @ApiTags('groups')
 @Controller('groups')
@@ -63,6 +62,7 @@ export class GroupsController {
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
     const baseUrl = 'http://localhost:5000';
+
     createGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
     const data = await this.groupsService.createOne(createGroupDto, user);
@@ -73,7 +73,6 @@ export class GroupsController {
     };
   }
 
-  // devuelve todos los grupos
   @Get()
   async findAll() {
     const data = await this.groupsService.findAll();
@@ -82,6 +81,12 @@ export class GroupsController {
       message: 'Grupos obtenidos con éxito',
       data: data,
     };
+  }
+
+  @Auth({ resource: AppResource.groups, action: 'read', possession: 'own' })
+  @Get('grupo-usuario')
+  async findUserGroups(@User() user: UserEntity) {
+    return this.groupsService.findUserGroups(user.id);
   }
 
   @Get('populares')
@@ -194,7 +199,7 @@ export class GroupsController {
     possession: 'own',
   })
   @Delete(':id')
-  async remove(@Param('id') id: string, @User() user?: UserEntity) {
+  async remove(@Param('id') id: string, @User() user: UserEntity) {
     const fs = require('fs');
 
     const grupo = await this.groupsService.getByIdUser(id, user);

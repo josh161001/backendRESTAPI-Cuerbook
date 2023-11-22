@@ -27,7 +27,7 @@ export class Group {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'bool', default: true, nullable: false })
+  @Column({ type: 'bool', default: false, nullable: false })
   status: boolean;
 
   @ManyToOne(() => User, (user) => user.groups, {

@@ -27,6 +27,7 @@ import { NestFactory } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import InitSeeder from './database/seeds/init.seeder';
 import { MailerModule } from './modules/mailer/mail.module';
+import { PdfModule } from './modules/pdf/pdf.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { MailerModule } from './modules/mailer/mail.module';
     NoticeModule,
     CategoriesModule,
     MailerModule,
+    PdfModule,
   ],
   controllers: [],
   providers: [],

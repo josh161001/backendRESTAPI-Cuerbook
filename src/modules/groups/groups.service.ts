@@ -9,8 +9,7 @@ import { Repository } from 'typeorm';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { User } from '../users/entities/user.entity';
 import { Group } from './entities/group.entity';
-import { get } from 'http';
-import { take } from 'rxjs';
+import { AppRoles } from 'src/app.roles';
 
 @Injectable()
 export class GroupsService {
@@ -41,24 +40,43 @@ export class GroupsService {
 
   // devuelve todos los grupos
   async findAll(): Promise<Group[]> {
-    const grupos = await this.groupRepository.find();
-
-    grupos.map((grupo) => delete grupo.user.password);
+    const grupos = await this.groupRepository
+      .createQueryBuilder('group')
+      .leftJoin('group.user', 'user')
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
+      .getMany();
 
     return grupos;
   }
+  async findUserGroups(userId: string): Promise<Group[]> {
+    const grupos = await this.groupRepository
+      .createQueryBuilder('group')
+      .leftJoin('group.user', 'user')
+      .where('user.id = :id', { id: userId })
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
+      .getMany();
+
+    return grupos;
+  }
+
   async getTotalGrupos(): Promise<number> {
     const totalGrupos = await this.groupRepository.count();
 
     return totalGrupos;
   }
 
-  // devuelve el grupo con id si coincide con el id del usuario logueado
+  // devuelve el grupo con id si coincide con el id del usuario logueado o si el usuario es un administrador
   async getByIdUser(id: string, userEntity?: User): Promise<Group> {
     const grupo = await this.groupRepository
       .findOne({ where: { id: id } })
       .then((g) =>
-        !userEntity ? g : !!g && userEntity.id === g.user.id ? g : null,
+        !userEntity
+          ? g
+          : !!g &&
+            (userEntity.id === g.user.id ||
+              userEntity.roles.includes(AppRoles.admin))
+          ? g
+          : null,
       );
 
     if (!grupo)
@@ -73,7 +91,7 @@ export class GroupsService {
     const grupos = await this.groupRepository
       .createQueryBuilder('group')
       .leftJoin('group.user', 'user')
-      .addSelect(['user.name', 'user.imagen'])
+      .addSelect(['user.name', 'user.imagen', 'user.department', 'user.id'])
       .take(3)
       .getMany();
 
@@ -87,7 +105,7 @@ export class GroupsService {
       .leftJoinAndSelect('group.events', 'events')
       .leftJoinAndSelect('events.Categories', 'categories')
       .leftJoin('events.user', 'user')
-      .addSelect(['user.name'])
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
       .where('group.id = :id', { id: id })
       .getOne();
 

@@ -29,7 +29,6 @@ import { InjectRolesBuilder, RolesBuilder } from 'nest-access-control';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { imagenFileFilter, renameImage } from '../users/helpers/upload.helper';
-import e from 'express';
 
 @ApiTags('events')
 @Controller('events')
@@ -58,8 +57,8 @@ export class EventsController {
   async create(
     @UploadedFile() imagen: Express.Multer.File,
     @Param('groupId') groupId: string,
-    @Body() createEventDto: CreateEventDto,
     @Body('categoryId') categoryId: number,
+    @Body() createEventDto: CreateEventDto,
     @User() user: UserEntity,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
@@ -88,6 +87,12 @@ export class EventsController {
       message: 'Lista de eventos',
       data: data,
     };
+  }
+
+  @Auth({ resource: AppResource.events, action: 'read', possession: 'own' })
+  @Get('evento-usuario')
+  async findUserEvents(@User() user: UserEntity) {
+    return this.eventsService.finUserEvents(user.id);
   }
 
   @Get('/proximos')
@@ -150,6 +155,7 @@ export class EventsController {
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
     @User() user: UserEntity,
+    @Body('categoryId') categoryId: number,
   ) {
     const fs = require('fs');
 
@@ -160,7 +166,25 @@ export class EventsController {
     ) {
       if (imagen) {
         const evento = await this.eventsService.findOne(id);
+        const imagenUrl = evento.imagen.split('/').pop();
 
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+
+        const baseUrl = 'http://localhost:5000';
+        updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const evento = await this.eventsService.findOne(id);
+
+        if (evento && evento.imagen) {
+          updateEventDto.imagen = evento.imagen;
+        }
+      }
+      data = await this.eventsService.update(id, updateEventDto, categoryId);
+    } else {
+      if (imagen) {
+        const evento = await this.eventsService.findOne(id);
         const imagenUrl = evento.imagen.split('/').pop();
 
         fs.unlink(`./upload/${imagenUrl}`, (error) => {
@@ -175,18 +199,12 @@ export class EventsController {
           updateEventDto.imagen = evento.imagen;
         }
       }
-      data = this.eventsService.update(id, updateEventDto);
-    } else {
-      if (imagen) {
-        const baseUrl = 'http://localhost:5000';
-        updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
-      } else {
-        const evento = await this.eventsService.findOne(id);
-        if (evento && evento.imagen) {
-          updateEventDto.imagen = evento.imagen;
-        }
-      }
-      data = this.eventsService.update(id, updateEventDto, user);
+      data = await this.eventsService.update(
+        id,
+        updateEventDto,
+        categoryId,
+        user,
+      );
     }
 
     return {

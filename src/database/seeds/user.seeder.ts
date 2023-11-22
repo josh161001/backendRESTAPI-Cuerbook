@@ -9,10 +9,12 @@ export default class UserSeeder implements Seeder {
     const repository = dataSource.getRepository(User);
 
     const data = {
-      name: 'admin',
+      department: 'Comunicación y Difusión',
+      name: 'María del Carmen Errasquin Barradas',
       email: 'l19480829@nuevoleon.tecnm.mx',
       password: await hash('161001', 10),
-      description: 'Administrador del sistema',
+      description:
+        'Comunicar nuestra identidad y valores de manera efectiva, conectando y comprometiendo a nuestra audiencia a través de estrategias innovadoras y contenido relevante.',
       imagen: 'http://localhost:5000/upload/admin.jpg',
       roles: [AppRoles.admin], //
       status: true,

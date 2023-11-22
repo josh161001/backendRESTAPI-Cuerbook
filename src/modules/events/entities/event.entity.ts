@@ -19,13 +19,17 @@ export class Event {
   @Column({ length: 256, nullable: false })
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   imagen: string;
 
   @Column({ nullable: false })
   cupo: number;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    nullable: false,
+  })
   fecha: Date;
 
   @Column({ nullable: false })
@@ -34,7 +38,10 @@ export class Event {
   @Column({ type: 'text', nullable: false })
   description: string;
 
-  @Column({ type: 'bool', default: true })
+  @Column({ nullable: false, type: 'text' })
+  detalles: string;
+
+  @Column({ type: 'bool', default: false, nullable: false })
   status: boolean;
 
   @ManyToOne(() => Group, (group) => group.events, {

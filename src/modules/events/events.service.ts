@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +12,7 @@ import { User } from '../users/entities/user.entity';
 import { Event } from './entities/event.entity';
 import { Group } from '../groups/entities/group.entity';
 import { Category } from '../categories/entities/category.entity';
+import { AppRoles } from 'src/app.roles';
 
 @Injectable()
 export class EventsService {
@@ -55,7 +60,7 @@ export class EventsService {
       throw new BadRequestException('El nombre del evento ya existe');
     }
 
-    const evento = this.eventRepository.create({
+    const evento = await this.eventRepository.create({
       ...createEventDto,
       user,
       group,
@@ -65,9 +70,7 @@ export class EventsService {
     delete evento.group.user.password;
     delete evento.user.password;
 
-    const nuevoEvento = await this.eventRepository.save(evento);
-
-    return nuevoEvento;
+    return await this.eventRepository.save(evento);
   }
 
   // busca todos los eventos y elimina el usuario y el grupo
@@ -76,7 +79,19 @@ export class EventsService {
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.Categories', 'Categories')
       .leftJoin('event.user', 'user')
-      .addSelect(['user.id', 'user.name'])
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
+      .getMany();
+
+    return eventos;
+  }
+
+  async finUserEvents(userId: string): Promise<Event[]> {
+    const eventos = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.Categories', 'Categories')
+      .leftJoin('event.user', 'user')
+      .where('user.id = :id', { id: userId })
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
       .getMany();
 
     return eventos;
@@ -89,14 +104,10 @@ export class EventsService {
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.Categories', 'Categories')
       .leftJoin('event.user', 'user')
-      .addSelect(['user.id', 'user.name'])
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
       .where('event.fecha >= :fecha', { fecha: fecha })
       .orderBy('event.fecha', 'ASC')
       .getMany();
-
-    eventos.map((evento) => {
-      delete evento.user.password;
-    });
 
     return eventos;
   }
@@ -108,7 +119,7 @@ export class EventsService {
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.Categories', 'Categories')
       .leftJoin('event.user', 'user')
-      .addSelect(['user.id', 'user.name'])
+      .addSelect(['user.id', 'user.name', 'user.imagen', 'user.department'])
       .where('event.fecha < :fecha', { fecha: fecha })
       .orderBy('event.fecha', 'DESC')
       .getMany();
@@ -125,9 +136,15 @@ export class EventsService {
   // busca el evento por id y el  usuario autenticado
   async getOneByIdEvent(id: string, userEntity?: User): Promise<Event> {
     const evento = await this.eventRepository
-      .findOne({ where: { id: id }, relations: ['Categories'] })
+      .findOne({ where: { id: id } })
       .then((e) =>
-        !userEntity ? e : !!e && userEntity.id === e.user.id ? e : null,
+        !userEntity
+          ? e
+          : !!e &&
+            (userEntity.id === e.user.id ||
+              userEntity.roles.includes(AppRoles.admin))
+          ? e
+          : null,
       );
 
     if (!evento) {
@@ -158,24 +175,28 @@ export class EventsService {
   }
 
   // actualiza el evento por id y el usuario que lo creo
-  async update(id: string, updateEventDto: UpdateEventDto, userEntity?: User) {
-    const fs = require('fs');
-
+  async update(
+    id: string,
+    updateEventDto: UpdateEventDto,
+    categoryId: number,
+    userEntity?: User,
+  ) {
     const evento = await this.getOneByIdEvent(id, userEntity);
 
     if (!evento) {
       throw new BadRequestException('El evento no existe o no autorizado');
     }
-    if (updateEventDto.imagen) {
-      const imagenUrl = evento.imagen;
 
-      if (imagenUrl) {
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({
+        where: { id: categoryId },
+      });
+
+      if (!category) {
+        throw new BadRequestException('La categoria no existe');
       }
 
-      evento.imagen = updateEventDto.imagen;
+      evento.Categories = category;
     }
 
     Object.assign(evento, updateEventDto);
@@ -190,7 +211,7 @@ export class EventsService {
     const evento = await this.getOneByIdEvent(id, userEntity);
 
     if (!evento) {
-      throw new BadRequestException('El evento no existe o no autorizado');
+      throw new NotFoundException('El evento no existe o no autorizado');
     }
 
     const data = await this.eventRepository.remove(evento);

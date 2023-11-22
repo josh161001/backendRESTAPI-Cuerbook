@@ -11,7 +11,12 @@ import { AppRoles } from 'src/app.roles';
 import { EnumToString } from 'src/common/enum/enum';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'Grupo de Gestion empresarial' })
+  @ApiProperty({ example: 'Gestion empresarial' })
+  @MaxLength(255)
+  @IsString()
+  department: string;
+
+  @ApiProperty({ example: 'Gestion empresarial' })
   @MaxLength(255)
   @IsString()
   name: string;

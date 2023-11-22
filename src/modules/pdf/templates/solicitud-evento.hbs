@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo {
+            border: 1px solid #000000;
+            border-collapse: collapse;
+            padding: 8px;
+            width: 100%; 
+        }
+       
+        .demo th {
+            border: 1px solid #000000;
+            padding: 5px;
+        }
+        .demo td {
+            border: 1px solid #000000;
+            padding: 6px; 
+        }
+        .demo .text {
+            padding-left: 10px;
+            padding-right: 10px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16px;
+        }
+        .text {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16;
+        }
+        .demo .instituto {
+            font-size: 0.8em; 
+            color: #000000;
+            font-weight: normal; 
+        }
+        .demo .tecnl {
+            font-weight: bold; 
+        }
+        .p-2 {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .pl {
+            padding-left: 10px;
+        }
+        .fw {
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        h1 {
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            font-size: 17px;
+        }
+        h2 {
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            font-size: 15px;
+        }
+        .checkbox {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: #fff;
+            border: 2px solid #000;
+        }
+        .checkbox.checked {
+            background-color: #000;
+        }
+        .pt {
+            padding-top: 15px;
+        }
+        .txt-center {
+            text-align: center;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+        }
+
+        .txt{
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+
+<table class="demo">
+    <thead>
+        <tr>
+            <th rowspan="2"><img src="https://media-exp1.licdn.com/dms/image/C4D0BAQELwMjZ_Xuyeg/company-logo_200_200/0?e=2159024400&v=beta&t=XnfFe706vwAR_PsVvGc0IVuBNq-kIB3qQHY38sf78qo" alt="Logo UNAM" width="100" height="100"></th>
+            <th ><span class="tecnl p-2"> TECNOLÓGICO NACIONAL DE MÉXICO </span><br><span class="instituto">INSTITUTO TECNOLÓGICO DE NUEVO LEÓN </span></th>
+            <th class="txt" colspan="2">7 de julio de 2017</th>
+        </tr>
+        <tr>
+            <th class="fw"> Solicitud de servicio de difusión</th>
+            <th class="txt">Código: <br/>
+            REG- 7400-01</th>
+            <th class="txt">Revisión: 1</th>
+        </tr>
+    </thead>
+</table>
+
+<h1 class="text">SOLICITUD DE SERVICIO DE DIFUSION</h1>
+<p class="text">Número de solicitud:_________</p>
+<table class="demo">
+    <tr>
+        <td class="fw" colspan="1">Difusión: </td>
+        <td class="fw" colspan="2">Interno<label> 
+    <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+    <span class="checkbox"></span> 
+</label> </td>
+        <td class="fw" colspan="1">Externo<label> 
+    <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+    <span class="checkbox"></span> 
+</label> </td>
+    </tr>
+    <tr>
+        <td colspan="1" class="fw">Departamento que solicita:</td>
+        <td colspan="3" class="text">{{nombreDepartamento}}</td>
+    </tr>
+    <tr>
+        <td colspan="2" class="fw">Nombre y firma del (de la) Jefe (a) de 
+            <br/>Departamento:</td>
+        <td colspan="2" class="text">{{jefeDepartamento}}</td>
+    </tr>
+    <tr>
+        <td colspan="2" class="fw">Fecha de elaboración de la solicitud:</td>
+        <td colspan="2" class="text">{{fechacreatedATEvento}}</td>
+    </tr>
+</table>
+
+<div class="pt">
+    <table class="demo">
+        <tr>
+            <td class="fw" colspan="2">Información / evento a difundir: </td>
+            <td colspan="2" class="text">{{nombreEvento}}</td>  
+        </tr>
+        <tr>
+            <td class="fw">Fecha y hora de <br/> inicio del evento:</td>
+            <td class="text">{{fechaEvento}}</td>
+            <td class="fw">Lugar del <br/>evento: </td>
+            <td class="text">{{lugarEvento}}</td>
+        </tr>
+        <tr>
+            <td class="fw">Fecha y hora de  termino del evento:</td>
+            <td colspan="3" class="text"></td>
+        </tr>
+        <tr>
+            <td class="fw" colspan="2">Responsable del evento: </td>
+            <td colspan="2" class="text">{{jefeDepartamento}}</td>
+        </tr>
+        <tr>
+            <td class="fw">Requiere fotografía: Si<label> 
+        <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+        <span class="checkbox"></span>       
+            <td class="fw">No<label> 
+        <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+        <span class="checkbox"></span> 
+    </label> </td>     
+        <td class="fw">Otro servicio de Difusión:</td>
+            <td class="text"></td>
+        </tr>
+        <tr>
+            <td colspan="4" class="fw">Detalles del evento (redacción para nota informativa): <br/>
+                 <span class="txt">{{detallesEvento}}</span>  
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" class="fw"><h2>USO EXCLUSIVO DEL DEPARTAMENTO DE COMUNICACIÓN Y DIFUSIÓN</h2></td>
+        </tr>
+        <tr>
+            <td class="fw">Recibido por: </td>
+            <td colspan="4" class="text"></td>
+        </tr>
+        <tr>
+            <td class="fw" colspan="3">Autorizado (departamento emisor del servicio): </td>
+            <td colspan="1" class="text"></td>
+        </tr>
+        <tr>
+            <td class="fw" colspan="3">Liberado por (departamento receptor del servicio): </td>
+            <td colspan="1" class="text"></td>
+        </tr>
+        <tr>
+            <td colspan="4" class="txt-center"> 
+                <h2>¿CÓMO CALIFICAS EL SERVICIO REALIZADO?</h2>
+                <div class="grid-container fw">
+                    <div class="pl fw">
+                        Excelente<label> 
+                            <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+                            <span class="checkbox"></span> 
+                        </label> 
+                    </div>
+                    <div class="pl">
+                        Muy bueno<label> 
+                            <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+                            <span class="checkbox"></span> 
+                        </label> 
+                    </div>
+                    <div>
+                        Regular<label> 
+                            <input type="checkbox" style="display: none;" onchange="this.parentNode.classList.toggle('checked');">
+                            <span class="checkbox"></span> 
+                        </label>  
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" class="fw">Observaciones: </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

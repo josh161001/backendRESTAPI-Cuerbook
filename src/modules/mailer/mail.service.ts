@@ -7,11 +7,14 @@ import { MailerService as MailerServices } from '@nestjs-modules/mailer';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdatePasswordUserDto } from './dto/updatePasswordUser.dto';
 import { hash } from 'bcrypt';
+import { USER_EMAIL } from 'src/config/config.keys';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MailService {
   constructor(
     private readonly mailerServices: MailerServices,
+    private readonly configService: ConfigService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}

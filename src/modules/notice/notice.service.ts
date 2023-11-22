@@ -33,29 +33,7 @@ export class NoticeService {
   }
 
   async findAll(): Promise<Notice[]> {
-    const Notices = await this.noticeRepository.find({
-      relations: ['user'],
-    });
-
-    Notices.map((notice) => {
-      delete notice.user.password;
-    });
-
-    return Notices;
-  }
-
-  async findNoticias(): Promise<Notice[]> {
-    const Notices = await this.noticeRepository.find({
-      relations: ['user'],
-      order: {
-        createdAt: 'DESC',
-      },
-      take: 3,
-    });
-
-    Notices.map((notice) => {
-      delete notice.user.password;
-    });
+    const Notices = await this.noticeRepository.find();
 
     return Notices;
   }
@@ -82,17 +60,44 @@ export class NoticeService {
     return notice;
   }
 
-  async findOne(id: string): Promise<Notice> {
-    const notice = await this.noticeRepository.findOne({
-      where: { id },
-      relations: ['user'],
+  async getTakeNoticesAsc(): Promise<Notice[]> {
+    const notices = await this.noticeRepository.find({
+      order: {
+        createdAt: 'ASC',
+      },
+      take: 6,
     });
+
+    return notices;
+  }
+  async getTakeNoticesDesc(): Promise<Notice[]> {
+    const notices = await this.noticeRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 3,
+    });
+
+    return notices;
+  }
+
+  async findOne(id: string): Promise<Notice> {
+    const notice = await this.noticeRepository
+      .createQueryBuilder('notice')
+      .leftJoin('notice.user', 'user')
+      .addSelect([
+        'user.id',
+        'user.name',
+        'user.imagen',
+        'user.description',
+        'user.department',
+      ])
+      .where('notice.id = :id', { id: id })
+      .getOne();
 
     if (!notice) {
       throw new NotFoundException('La noticia no existe');
     }
-
-    delete notice.user.password;
 
     return notice;
   }

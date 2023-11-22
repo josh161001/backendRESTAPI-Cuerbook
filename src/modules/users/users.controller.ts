@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -185,6 +184,22 @@ export class UsersController {
       data,
     };
   }
+
+  // @Auth({ resource: AppResource.users, action: 'read', possession: 'own' })
+  // @Get('/:id/password')
+  // async getPassword(@Param('id') id: string, @User() user: UserEntity) {
+  //   let data;
+
+  //   if (this.rolesBuilder.can(user.roles).readAny(AppResource.users).granted) {
+  //     data = await this.usersService.getUserwithPassword(id);
+  //   } else {
+  //     data = await this.usersService.getUserwithPassword(id, user);
+  //   }
+  //   return {
+  //     message: 'Password encontrada',
+  //     data,
+  //   };
+  // }
 
   @Auth({ action: 'delete', possession: 'any', resource: AppResource.users })
   @Delete(':id')

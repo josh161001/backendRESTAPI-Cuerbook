@@ -11,6 +11,7 @@ export enum AppResource {
   groups = 'groups',
   notice = 'notice',
   categories = 'categories',
+  pdf = 'pdf',
 }
 
 export const roles: RolesBuilder = new RolesBuilder();
@@ -18,10 +19,13 @@ export const roles: RolesBuilder = new RolesBuilder();
 roles
   .grant(AppRoles.user)
   .updateOwn([AppResource.users])
+  .readOwn([AppResource.users])
   .createOwn([AppResource.events])
+  .readOwn([AppResource.events])
   .updateOwn([AppResource.events])
   .deleteOwn([AppResource.events])
   .createOwn([AppResource.groups])
+  .readOwn([AppResource.groups])
   .updateOwn([AppResource.groups])
   .deleteOwn([AppResource.groups])
   .grant(AppRoles.admin)
@@ -34,6 +38,7 @@ roles
   .createAny([AppResource.notice])
   .updateAny([AppResource.notice])
   .deleteAny([AppResource.notice])
+  .readAny([AppResource.pdf])
   .readAny([AppResource.categories])
   .createAny([AppResource.categories])
   .updateAny([AppResource.categories])

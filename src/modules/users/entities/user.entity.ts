@@ -9,6 +9,7 @@ import {
   OneToMany,
   CreateDateColumn,
 } from 'typeorm';
+import { AppRoles } from 'src/app.roles';
 
 @Entity()
 export class User {
@@ -16,6 +17,12 @@ export class User {
   id: string;
 
   @Column({ length: 255, nullable: false })
+  department: string;
+
+  @Column({
+    length: 255,
+    nullable: false,
+  })
   name: string;
 
   @Column({ length: 255, unique: true, nullable: false })
@@ -33,7 +40,7 @@ export class User {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'simple-array', nullable: false })
+  @Column({ type: 'simple-array', nullable: false, default: AppRoles.user })
   roles: string[]; //
 
   @Column({ nullable: true })

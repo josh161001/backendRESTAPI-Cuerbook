@@ -77,9 +77,20 @@ export class NoticeController {
       data: data,
     };
   }
-  @Get('noticias')
-  async findNoticiasCTLR() {
-    const data = await this.noticeService.findNoticias();
+
+  @Get('noticiasasc')
+  async findNoticiasAsc() {
+    const data = await this.noticeService.getTakeNoticesAsc();
+
+    return {
+      message: 'Noticias obtenidas con éxito',
+      data: data,
+    };
+  }
+
+  @Get('noticiasdesc')
+  async findNoticiasDesc() {
+    const data = await this.noticeService.getTakeNoticesDesc();
 
     return {
       message: 'Noticias obtenidas con éxito',
@@ -128,32 +139,53 @@ export class NoticeController {
     @User() user: UserEntity,
     @UploadedFile() imagen: Express.Multer.File,
   ) {
+    let data;
     const fs = require('fs');
 
-    if (imagen) {
-      const grupo = await this.noticeService.findOne(id);
-      const imagenUrl = grupo.imagen.split('/').pop();
+    if (
+      this.rolesBuilder.can(user.roles).updateAny(AppResource.notice).granted
+    ) {
+      if (imagen) {
+        const notice = await this.noticeService.findOne(id);
 
-      fs.unlink(`./upload/${imagenUrl}`, (error) => {
-        if (error) throw error;
-      });
+        const imagenUrl = notice.imagen.split('/').pop();
 
-      const baseUrl = 'http://localhost:5000';
-      updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
-    } else {
-      const grupo = await this.noticeService.findOne(id);
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
 
-      if (grupo && grupo.imagen) {
-        updateNoticeDto.imagen = grupo.imagen;
+        const baseUrl = 'http://localhost:5000';
+        updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const notice = await this.noticeService.findOne(id);
+
+        if (notice && notice.imagen) {
+          updateNoticeDto.imagen = notice.imagen;
+        }
       }
+      data = await this.noticeService.update(id, updateNoticeDto);
+    } else {
+      if (imagen) {
+        const notice = await this.noticeService.findOne(id);
+
+        const imagenUrl = notice.imagen.split('/').pop();
+
+        fs.unlink(`./upload/${imagenUrl}`, (error) => {
+          if (error) throw error;
+        });
+
+        const baseUrl = 'http://localhost:5000';
+        updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+      } else {
+        const notice = await this.noticeService.findOne(id);
+        if (notice && notice.imagen) {
+          updateNoticeDto.imagen = notice.imagen;
+        }
+      }
+      data = await this.noticeService.update(id, user);
     }
 
-    const data = await this.noticeService.update(id, user);
-
-    return {
-      message: 'Noticia actualizada con éxito',
-      data: data,
-    };
+    return { message: 'Usuario actualizado', data };
   }
 
   @Auth({
