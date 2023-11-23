@@ -39,7 +39,7 @@ import { join } from 'path';
       envFilePath: '.env',
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'build'),
+      rootPath: join(__dirname, '..', 'dist'),
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
