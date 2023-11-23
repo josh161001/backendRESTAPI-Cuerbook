@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prebuild": "mkdir -p dist/upload && cp -r upload/* dist/upload || true",
+    "prebuild": "rimraf dist && mkdir -p dist/upload dist/client && cp -r upload/* dist/upload && cp -r client/* dist/client",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
