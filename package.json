@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prebuild": "rimraf dist && mkdir -p dist/upload dist/client && [ -d upload ] && cp -r upload/* dist/upload || echo 'Directory upload does not exist' && [ -d client ] && cp -r client/* dist/client || echo 'Directory client does not exist'",
+    "prebuild": "rimraf dist && mkdir -p dist/upload dist/client && cp -r client/* dist/client && cp -r upload/* dist/upload",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
