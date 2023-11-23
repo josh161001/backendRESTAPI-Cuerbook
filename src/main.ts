@@ -25,14 +25,6 @@ async function bootstrap() {
     },
   });
 
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     transform: true,
-  //     whitelist: true,
-  //     forbidNonWhitelisted: true,
-  //   }),
-  // );
-
   app.use('/upload', express.static(join(__dirname, '../../', 'upload')));
 
   await app.listen(AppModule.port);
