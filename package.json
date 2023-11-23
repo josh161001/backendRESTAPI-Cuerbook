@@ -6,9 +6,9 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prebuild": "if not exist dist\\upload mkdir dist\\upload && xcopy /E /I upload dist\\upload",   
-    "build": "nest build && if not exist dist\\upload mkdir dist\\upload && xcopy /E /I upload dist\\upload",
-        "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prebuild": "mkdir -p dist/upload && cp -r upload/* dist/upload || true",
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

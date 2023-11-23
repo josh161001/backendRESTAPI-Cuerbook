@@ -158,26 +158,6 @@ export class UsersService {
     await this.userRepository.save(usuario);
   }
 
-  // async getUserwithPassword(id: string, userEntity?: User) {
-  //   const usuario = await this.getOneId(id, userEntity);
-
-  //   delete usuario.groups;
-  //   delete usuario.id;
-  //   delete usuario.name;
-  //   delete usuario.email;
-  //   delete usuario.department;
-  //   delete usuario.imagen;
-  //   delete usuario.roles;
-  //   delete usuario.createdAt;
-  //   delete usuario.status;
-  //   delete usuario.modifiedAt;
-  //   delete usuario.description;
-
-  //   if (!usuario) throw new NotFoundException('Usuario no encontrado');
-
-  //   return usuario;
-  // }
-
   //busca un usuario por id o email y elimina el campo password
   async findOneUser(data: UserFindOne) {
     return await this.userRepository

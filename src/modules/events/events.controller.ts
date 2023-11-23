@@ -62,7 +62,7 @@ export class EventsController {
     @User() user: UserEntity,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = 'https://cuerbook-backend.onrender.com';
 
     createEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -172,7 +172,7 @@ export class EventsController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const evento = await this.eventsService.findOne(id);
@@ -191,7 +191,7 @@ export class EventsController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const evento = await this.eventsService.findOne(id);

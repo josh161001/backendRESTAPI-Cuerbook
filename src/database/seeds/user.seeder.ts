@@ -15,7 +15,7 @@ export default class UserSeeder implements Seeder {
       password: await hash('161001', 10),
       description:
         'Comunicar nuestra identidad y valores de manera efectiva, conectando y comprometiendo a nuestra audiencia a través de estrategias innovadoras y contenido relevante.',
-      imagen: 'http://localhost:5000/upload/admin.jpg',
+      imagen: 'https://cuerbook-backend.onrender.com/upload/admin.jpg',
       roles: [AppRoles.admin], //
       status: true,
     };

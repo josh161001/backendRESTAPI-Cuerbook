@@ -53,7 +53,7 @@ export class UsersController {
     @Body() createUserDto: CreateUserDto,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = 'https://cuerbook-backend.onrender.com';
 
     createUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -123,7 +123,7 @@ export class UsersController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const user = await this.usersService.findOne(id);
@@ -143,7 +143,7 @@ export class UsersController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const user = await this.usersService.findOne(id);

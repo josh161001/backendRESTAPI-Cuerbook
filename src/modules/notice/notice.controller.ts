@@ -56,7 +56,7 @@ export class NoticeController {
       throw new BadRequestException('imagen requerida');
     }
 
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = 'https://cuerbook-backend.onrender.com';
 
     createNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -154,7 +154,7 @@ export class NoticeController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const notice = await this.noticeService.findOne(id);
@@ -174,7 +174,7 @@ export class NoticeController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const notice = await this.noticeService.findOne(id);

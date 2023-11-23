@@ -61,7 +61,7 @@ export class GroupsController {
     @User() user: UserEntity,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = 'https://cuerbook-backend.onrender.com';
 
     createGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -157,7 +157,7 @@ export class GroupsController {
           if (error) throw error;
         });
 
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const grupo = await this.groupsService.findOne(id);
@@ -175,7 +175,7 @@ export class GroupsController {
         fs.unlink(`./upload/${imagenUrl}`, (error) => {
           if (error) throw error;
         });
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const grupo = await this.groupsService.findOne(id);
