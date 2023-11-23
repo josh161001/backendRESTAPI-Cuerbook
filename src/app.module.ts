@@ -29,6 +29,8 @@ import { DataSource } from 'typeorm';
 import InitSeeder from './database/seeds/init.seeder';
 import { MailerModule } from './modules/mailer/mail.module';
 import { PdfModule } from './modules/pdf/pdf.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -36,6 +38,10 @@ import { PdfModule } from './modules/pdf/pdf.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'dist', 'public'),
+    }),
+    ,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
