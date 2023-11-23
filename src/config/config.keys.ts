@@ -8,3 +8,4 @@ export const JWT_SECRET = 'JWT_SECRET';
 export const USER_EMAIL = 'USER_EMAIL';
 export const USER_EMAIL_PASSWORD = 'USER_EMAIL_PASSWORD';
 export const EMAIL_HOST = 'EMAIL_HOST';
+export const DATABASE_SSL = 'DATABASE_SSL';

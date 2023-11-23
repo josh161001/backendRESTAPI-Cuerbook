@@ -19,6 +19,7 @@ import {
   DATABASE_NAME,
   DATABASE_PASSWORD,
   DATABASE_PORT,
+  DATABASE_SSL,
   DATABASE_USERNAME,
   PORT,
 } from './config/config.keys';
@@ -31,6 +32,10 @@ import { PdfModule } from './modules/pdf/pdf.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -41,15 +46,22 @@ import { PdfModule } from './modules/pdf/pdf.module';
         password: config.get<string>(DATABASE_PASSWORD),
         database: config.get<string>(DATABASE_NAME),
         synchronize: true,
+        autoLoadEntities: true,
+        ssl: config.get<string>(DATABASE_SSL) === 'true',
+        extra: {
+          ssl:
+            config.get<string>(DATABASE_SSL) === 'true'
+              ? {
+                  rejectUnauthorized: false,
+                }
+              : null,
+        },
         dropSchema: false,
         entities: ['dist/**/**/*.entity{.js,.ts}'],
         migrations: ['dist/database/migrations/*{.js,.ts}'],
       }),
     }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
+
     AccessControlModule.forRoles(roles),
     AuthModule,
     UsersModule,
