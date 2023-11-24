@@ -166,14 +166,33 @@ export class EventsController {
     ) {
       if (imagen) {
         const evento = await this.eventsService.findOne(id);
-        const imagenUrl = evento.imagen.split('/').pop();
 
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
+        if (evento && evento.imagen) {
+          const imagenUrl = evento.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
 
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath, (error) => {
+              if (error) {
+                console;
+              } else {
+              }
+            });
+          } else {
+            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            evento.imagen = `${baseUrl}/upload/${imagen.filename}`;
+            await this.eventsService.update(
+              id,
+              { imagen: evento.imagen },
+              categoryId,
+            );
+          }
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        }
       } else {
         const evento = await this.eventsService.findOne(id);
 
@@ -184,17 +203,38 @@ export class EventsController {
       data = await this.eventsService.update(id, updateEventDto, categoryId);
     } else {
       if (imagen) {
-        const evento = await this.eventsService.findOne(id);
-        const imagenUrl = evento.imagen.split('/').pop();
+        const evento = await this.eventsService.getOneByIdEvent(id, user);
 
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
+        if (evento && evento.imagen) {
+          const imagenUrl = evento.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
 
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath, (error) => {
+              if (error) {
+                console.error('Error eliminando la imagen:', error);
+              } else {
+              }
+            });
+          } else {
+            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            evento.imagen = `${baseUrl}/upload/${imagen.filename}`;
+            await this.eventsService.update(
+              id,
+              { imagen: evento.imagen },
+              categoryId,
+              user,
+            );
+          }
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        }
       } else {
-        const evento = await this.eventsService.findOne(id);
+        const evento = await this.eventsService.getOneByIdEvent(id, user);
+
         if (evento && evento.imagen) {
           updateEventDto.imagen = evento.imagen;
         }
@@ -209,7 +249,7 @@ export class EventsController {
 
     return {
       message: 'Evento actualizado con éxito',
-      data: data,
+      data,
     };
   }
 
@@ -222,26 +262,38 @@ export class EventsController {
   @Delete(':id')
   async remove(@Param('id') id: string, @User() user: UserEntity) {
     const fs = require('fs');
-
     const evento = await this.eventsService.getOneByIdEvent(id, user);
-
-    if (!evento) {
-      throw new NotFoundException('El evento no existe o no autorizado');
-    }
-
-    const imagenUrl = evento.imagen.split('/').pop();
-
-    fs.unlink(`./upload/${imagenUrl}`, (error) => {
-      if (error) throw error;
-    });
-
     let data;
 
     if (
       this.rolesBuilder.can(user.roles).deleteAny(AppResource.events).granted
     ) {
+      if (evento && evento.imagen) {
+        const imagenUrl = evento.imagen.split('/').pop();
+        const imagePath = `./upload/${imagenUrl}`;
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        } else {
+          evento.imagen = null;
+          await this.eventsService.update(id, { imagen: evento.imagen }, null);
+        }
+      }
+
       data = await this.eventsService.remove(id);
     } else {
+      if (evento && evento.imagen) {
+        const imagenUrl = evento.imagen.split('/').pop();
+        const imagePath = `./upload/${imagenUrl}`;
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        } else {
+          evento.imagen = null;
+          await this.eventsService.update(id, { imagen: evento.imagen }, null);
+        }
+      }
+
       data = await this.eventsService.remove(id, user);
     }
 

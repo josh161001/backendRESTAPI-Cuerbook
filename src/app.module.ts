@@ -90,6 +90,7 @@ export class AppModule {
   async onModuleInit() {
     const app = await NestFactory.create(AppModule);
     const dataSource = app.get(DataSource);
+
     const initSeeder = new InitSeeder();
     await initSeeder.run(dataSource);
   }

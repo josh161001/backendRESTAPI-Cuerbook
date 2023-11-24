@@ -151,17 +151,31 @@ export class GroupsController {
     ) {
       if (imagen) {
         const grupo = await this.groupsService.findOne(id);
-        const imagenUrl = grupo.imagen.split('/').pop();
 
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
+        if (grupo && grupo.imagen) {
+          const imagenUrl = grupo.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
 
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath, (error) => {
+              if (error) {
+                console.log(error);
+              } else {
+              }
+            });
+          } else {
+            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            grupo.imagen = `${baseUrl}/upload/${imagen.filename}`;
+            await this.groupsService.update(id, { imagen: grupo.imagen });
+          }
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        }
       } else {
         const grupo = await this.groupsService.findOne(id);
-
         if (grupo && grupo.imagen) {
           updateGroupDto.imagen = grupo.imagen;
         }
@@ -169,16 +183,32 @@ export class GroupsController {
       data = await this.groupsService.update(id, updateGroupDto);
     } else {
       if (imagen) {
-        const grupo = await this.groupsService.findOne(id);
-        const imagenUrl = grupo.imagen.split('/').pop();
+        const grupo = await this.groupsService.getByIdUser(id, user);
 
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        if (grupo && grupo.imagen) {
+          const imagenUrl = grupo.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
+
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath, (error) => {
+              if (error) {
+                console.log(error);
+              } else {
+              }
+            });
+          } else {
+            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            grupo.imagen = `${baseUrl}/upload/${imagen.filename}`;
+            await this.groupsService.update(id, { imagen: grupo.imagen });
+          }
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        }
       } else {
-        const grupo = await this.groupsService.findOne(id);
+        const grupo = await this.groupsService.getByIdUser(id, user);
         if (grupo && grupo.imagen) {
           updateGroupDto.imagen = grupo.imagen;
         }
@@ -188,11 +218,9 @@ export class GroupsController {
 
     return {
       message: 'Grupo actualizado con éxito',
-      data: data,
+      data,
     };
   }
-
-  // elimina el grupo con id con el usuario autenticado
   @Auth({
     resource: AppResource.groups,
     action: 'delete',
@@ -201,28 +229,49 @@ export class GroupsController {
   @Delete(':id')
   async remove(@Param('id') id: string, @User() user: UserEntity) {
     const fs = require('fs');
-
     const grupo = await this.groupsService.getByIdUser(id, user);
-
-    if (!grupo) {
-      throw new NotFoundException('Grupo no encontrado o no autorizado');
-    }
-
-    const imagenUrl = grupo.imagen.split('/').pop();
-
-    fs.unlink(`./upload/${imagenUrl}`, (error) => {
-      if (error) throw error;
-    });
-
     let data;
 
     if (
       this.rolesBuilder.can(user.roles).deleteAny(AppResource.groups).granted
     ) {
+      if (grupo && grupo.imagen) {
+        const imagenUrl = grupo.imagen.split('/').pop();
+        const imagePath = `./upload/${imagenUrl}`;
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath, (error) => {
+            if (error) {
+              console.log(error);
+            } else {
+            }
+          });
+        } else {
+          grupo.imagen = null;
+          await this.groupsService.update(id, { imagen: grupo.imagen });
+        }
+      }
       data = await this.groupsService.remove(id);
     } else {
+      if (grupo && grupo.imagen) {
+        const imagenUrl = grupo.imagen.split('/').pop();
+        const imagePath = `./upload/${imagenUrl}`;
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath, (error) => {
+            if (error) {
+              console.log(error);
+            } else {
+            }
+          });
+        } else {
+          grupo.imagen = null;
+          await this.groupsService.update(id, { imagen: grupo.imagen });
+        }
+      }
       data = await this.groupsService.remove(id, user);
     }
+
     return {
       message: 'Grupo eliminado con éxito',
       data,

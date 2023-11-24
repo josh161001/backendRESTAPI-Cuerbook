@@ -179,7 +179,6 @@ export class UsersController {
           updateUserDto.imagen = user.imagen;
         }
       }
-
       data = await this.usersService.update(id, updateUserDto, user);
     }
 
@@ -216,25 +215,22 @@ export class UsersController {
   @Auth({ action: 'delete', possession: 'any', resource: AppResource.users })
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
+    const fs = require('fs');
+
     const usuario = await this.usersService.findOne(id);
 
     if (usuario && usuario.imagen) {
       const imagenUrl = usuario.imagen.split('/').pop();
       const imagePath = `./upload/${imagenUrl}`;
 
-      const fs = require('fs');
-
       if (fs.existsSync(imagePath)) {
         fs.unlink(imagePath, (error) => {
           if (error) {
             console.error('Error eliminando la imagen:', error);
           } else {
-            console.log('Imagen eliminada correctamente.');
           }
         });
       } else {
-        console.log('La imagen no existe en la ruta actual.');
-
         usuario.imagen = null;
         await this.usersService.update(id, { imagen: null });
       }
@@ -245,7 +241,7 @@ export class UsersController {
     const data = await this.usersService.remove(id);
 
     return {
-      message: 'Usuario eliminado junto con la imagen (si existía)',
+      message: 'Usuario eliminado correctamente',
       data,
     };
   }

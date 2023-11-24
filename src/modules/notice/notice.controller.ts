@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { NoticeService } from './notice.service';
 import { CreateNoticeDto } from './dto/create-notice.dto';
@@ -148,41 +149,37 @@ export class NoticeController {
       if (imagen) {
         const notice = await this.noticeService.findOne(id);
 
-        const imagenUrl = notice.imagen.split('/').pop();
+        if (notice && notice.imagen) {
+          const imagenUrl = notice.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
 
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
-
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath, (error) => {
+              if (error) {
+                console.log(error);
+              } else {
+                console.log('Imagen eliminada');
+              }
+            });
+          }
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          notice.imagen = `${baseUrl}/upload/${imagen.filename}`;
+          await this.noticeService.update(id, { imagen: notice.imagen });
+        }
         const baseUrl = 'https://cuerbook-backend.onrender.com';
         updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const notice = await this.noticeService.findOne(id);
-
         if (notice && notice.imagen) {
           updateNoticeDto.imagen = notice.imagen;
         }
       }
       data = await this.noticeService.update(id, updateNoticeDto);
     } else {
-      if (imagen) {
-        const notice = await this.noticeService.findOne(id);
-
-        const imagenUrl = notice.imagen.split('/').pop();
-
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
-
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
-      } else {
-        const notice = await this.noticeService.findOne(id);
-        if (notice && notice.imagen) {
-          updateNoticeDto.imagen = notice.imagen;
-        }
-      }
-      data = await this.noticeService.update(id, user);
+      throw new UnauthorizedException(
+        'No tienes permisos para actualizar esta noticia',
+      );
     }
 
     return { message: 'Usuario actualizado', data };
@@ -196,19 +193,33 @@ export class NoticeController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const fs = require('fs');
-
     const notice = await this.noticeService.findOne(id);
 
-    const imagenUrl = notice.imagen.split('/').pop();
+    if (notice && notice.imagen) {
+      const imagenUrl = notice.imagen.split('/').pop();
+      const imagePath = `./upload/${imagenUrl}`;
 
-    fs.unlink(`./upload/${imagenUrl}`, (error) => {
-      if (error) throw error;
-    });
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath, (error) => {
+          if (error) {
+            console.log(error);
+          } else {
+          }
+        });
+      } else {
+        console.log('La imagen no existe en la ruta actual.');
+
+        notice.imagen = null;
+        await this.noticeService.update(id, { imagen: notice.imagen });
+      }
+    } else {
+      console.log('No existe la imagen');
+    }
 
     const data = await this.noticeService.remove(id);
 
     return {
-      message: 'Noticia eliminada con éxito',
+      message: 'Noticia eliminada con correctamente',
       data: data,
     };
   }

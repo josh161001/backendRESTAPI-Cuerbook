@@ -19,7 +19,7 @@ export class Event {
   @Column({ length: 256, nullable: false })
   name: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   imagen: string;
 
   @Column({ nullable: false })
