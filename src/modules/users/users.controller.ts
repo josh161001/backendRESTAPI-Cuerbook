@@ -125,12 +125,9 @@ export class UsersController {
               if (error) {
                 console.error('Error eliminando la imagen:', error);
               } else {
-                console.log('Imagen eliminada correctamente.');
               }
             });
           } else {
-            console.log('La imagen no existe en la ruta actual.');
-            // Actualizamos la imagen del usuario con la nueva dirección proporcionada
             const baseUrl = 'https://cuerbook-backend.onrender.com';
             usuario.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.usersService.update(id, { imagen: usuario.imagen });
@@ -150,7 +147,40 @@ export class UsersController {
       }
       data = await this.usersService.update(id, updateUserDto);
     } else {
-      // Resto del código si el usuario no tiene permisos para actualizar
+      if (imagen) {
+        const usuario = await this.usersService.findOne(id);
+
+        if (usuario && usuario.imagen) {
+          const imagenUrl = usuario.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
+
+          if (fs.existsSync(imagePath)) {
+            fs.unlink(imagePath, (error) => {
+              if (error) {
+                console.error('Error eliminando la imagen:', error);
+              } else {
+              }
+            });
+          } else {
+            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            usuario.imagen = `${baseUrl}/upload/${imagen.filename}`;
+            await this.usersService.update(id, { imagen: usuario.imagen });
+          }
+
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        }
+      } else {
+        const user = await this.usersService.findOne(id);
+        if (user && user.imagen) {
+          updateUserDto.imagen = user.imagen;
+        }
+      }
+
+      data = await this.usersService.update(id, updateUserDto, user);
     }
 
     return { message: 'Usuario actualizado', data };
@@ -205,9 +235,7 @@ export class UsersController {
       } else {
         console.log('La imagen no existe en la ruta actual.');
 
-        // Eliminar la URL de la imagen del usuario si la imagen no existe
         usuario.imagen = null;
-        // Guardar el usuario actualizado sin la URL de la imagen
         await this.usersService.update(id, { imagen: null });
       }
     } else {
