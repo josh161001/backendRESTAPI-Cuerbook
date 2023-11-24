@@ -90,7 +90,6 @@ export class UsersController {
     return { message: 'Usuario encontrado', data };
   }
 
-  // actualiza el usuario con id con el usuario autenticado
   @Auth({ resource: AppResource.users, action: 'update', possession: 'own' })
   @UseInterceptors(
     FileInterceptor('imagen', {
@@ -117,42 +116,41 @@ export class UsersController {
       if (imagen) {
         const usuario = await this.usersService.findOne(id);
 
-        const imagenUrl = usuario.imagen.split('/').pop();
+        if (usuario && usuario.imagen) {
+          const imagenUrl = usuario.imagen.split('/').pop();
+          const imagePath = `./upload/${imagenUrl}`;
 
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
+          if (fs.existsSync(imagePath)) {
+            fs.unlink(imagePath, (error) => {
+              if (error) {
+                console.error('Error eliminando la imagen:', error);
+              } else {
+                console.log('Imagen eliminada correctamente.');
+              }
+            });
+          } else {
+            console.log('La imagen no existe en la ruta actual.');
+            // Actualizamos la imagen del usuario con la nueva dirección proporcionada
+            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            usuario.imagen = `${baseUrl}/upload/${imagen.filename}`;
+            await this.usersService.update(id, { imagen: usuario.imagen });
+          }
 
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        } else {
+          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
+        }
       } else {
         const user = await this.usersService.findOne(id);
-
         if (user && user.imagen) {
           updateUserDto.imagen = user.imagen;
         }
       }
       data = await this.usersService.update(id, updateUserDto);
     } else {
-      if (imagen) {
-        const usuario = await this.usersService.findOne(id);
-
-        const imagenUrl = usuario.imagen.split('/').pop();
-
-        fs.unlink(`./upload/${imagenUrl}`, (error) => {
-          if (error) throw error;
-        });
-
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
-        updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
-      } else {
-        const user = await this.usersService.findOne(id);
-        if (user && user.imagen) {
-          updateUserDto.imagen = user.imagen;
-        }
-      }
-      const { roles, ...rest } = updateUserDto;
-      data = await this.usersService.update(id, rest, user);
+      // Resto del código si el usuario no tiene permisos para actualizar
     }
 
     return { message: 'Usuario actualizado', data };
@@ -190,18 +188,36 @@ export class UsersController {
   async deleteUser(@Param('id') id: string) {
     const usuario = await this.usersService.findOne(id);
 
-    const imagenUrl = usuario.imagen.split('/').pop();
+    if (usuario && usuario.imagen) {
+      const imagenUrl = usuario.imagen.split('/').pop();
+      const imagePath = `./upload/${imagenUrl}`;
 
-    const fs = require('fs');
+      const fs = require('fs');
 
-    fs.unlink(`./upload/${imagenUrl}`, (error) => {
-      if (error) throw error;
-    });
+      if (fs.existsSync(imagePath)) {
+        fs.unlink(imagePath, (error) => {
+          if (error) {
+            console.error('Error eliminando la imagen:', error);
+          } else {
+            console.log('Imagen eliminada correctamente.');
+          }
+        });
+      } else {
+        console.log('La imagen no existe en la ruta actual.');
+
+        // Eliminar la URL de la imagen del usuario si la imagen no existe
+        usuario.imagen = null;
+        // Guardar el usuario actualizado sin la URL de la imagen
+        await this.usersService.update(id, { imagen: null });
+      }
+    } else {
+      console.log('El usuario no tiene una imagen asociada.');
+    }
 
     const data = await this.usersService.remove(id);
 
     return {
-      message: 'Usuario eliminado',
+      message: 'Usuario eliminado junto con la imagen (si existía)',
       data,
     };
   }
