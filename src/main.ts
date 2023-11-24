@@ -28,14 +28,6 @@ async function bootstrap() {
 
   app.use('/upload', express.static(path.join(__dirname, '../../', 'upload')));
 
-  // Sirve los archivos estáticos de tu aplicación React
-  app.use(serveStatic(path.join(__dirname, '../../', 'dist')));
-
-  // Redirige todas las solicitudes desconocidas al archivo index.html de tu aplicación React
-  app.use('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../', 'client', 'index.html'));
-  });
-
   await app.listen(AppModule.port);
 }
 bootstrap();

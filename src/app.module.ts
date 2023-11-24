@@ -38,7 +38,9 @@ import { join } from 'path';
       isGlobal: true,
       envFilePath: '.env',
     }),
-
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '../../', 'client'),
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
