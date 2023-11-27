@@ -221,6 +221,7 @@ export class GroupsController {
       data,
     };
   }
+
   @Auth({
     resource: AppResource.groups,
     action: 'delete',
@@ -260,7 +261,7 @@ export class GroupsController {
         if (fs.existsSync(imagePath)) {
           fs.unlinkSync(imagePath, (error) => {
             if (error) {
-              console.log(error);
+              throw new BadRequestException('error');
             } else {
             }
           });

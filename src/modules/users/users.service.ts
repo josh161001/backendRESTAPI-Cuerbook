@@ -65,6 +65,7 @@ export class UsersService {
     delete (await usuario).password;
     return usuario;
   }
+
   // devuelve todos los usuarios y elimina el campo password
   async findAll(): Promise<User[]> {
     const usuarios = await this.userRepository.find();
@@ -114,8 +115,6 @@ export class UsersService {
     return usuario;
   }
 
-  //actualiza el usuario con id si coincide con el id del usuario logueado
-  //elimina el campo password y devuelve el usuario actualizado
   async update(id: string, updateUserDto: UpdateUserDto, userEntity?: User) {
     const usuario = await this.getOneId(id, userEntity);
 

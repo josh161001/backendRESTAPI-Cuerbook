@@ -80,8 +80,8 @@ export class NoticeController {
   }
 
   @Get('noticiasasc')
-  async findNoticiasAsc() {
-    const data = await this.noticeService.getTakeNoticesAsc();
+  async findNoticiasAsc(selectedNoticeId: string) {
+    const data = await this.noticeService.getTakeNoticesAsc(selectedNoticeId);
 
     return {
       message: 'Noticias obtenidas con éxito',

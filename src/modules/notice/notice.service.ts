@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateNoticeDto } from './dto/update-notice.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { Notice } from './entities/notice.entity';
 import { CreateNoticeDto } from './dto/create-notice.dto';
 
@@ -60,8 +60,11 @@ export class NoticeService {
     return notice;
   }
 
-  async getTakeNoticesAsc(): Promise<Notice[]> {
+  async getTakeNoticesAsc(selectedNoticeId: string): Promise<Notice[]> {
     const notices = await this.noticeRepository.find({
+      where: {
+        id: Not(selectedNoticeId),
+      },
       order: {
         createdAt: 'ASC',
       },
@@ -70,6 +73,7 @@ export class NoticeService {
 
     return notices;
   }
+
   async getTakeNoticesDesc(): Promise<Notice[]> {
     const notices = await this.noticeRepository.find({
       order: {

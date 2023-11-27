@@ -36,7 +36,7 @@ export class UsersController {
     private readonly rolesBuilder: RolesBuilder,
   ) {}
 
-  // crea un usuario y crea unas validaciones para el email, nombre y password
+  // crea un usuario
   @Auth({ resource: AppResource.users, action: 'create', possession: 'any' })
   @Post()
   @UseInterceptors(
@@ -53,8 +53,8 @@ export class UsersController {
     @Body() createUserDto: CreateUserDto,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
-    const baseUrl = 'https://cuerbook-backend.onrender.com';
 
+    const baseUrl = 'https://cuerbook-backend.onrender.com';
     createUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
     const data = await this.usersService.createUser(createUserDto);
@@ -226,7 +226,7 @@ export class UsersController {
       if (fs.existsSync(imagePath)) {
         fs.unlink(imagePath, (error) => {
           if (error) {
-            console.error('Error eliminando la imagen:', error);
+            throw new BadRequestException('Error eliminando la imagen:', error);
           } else {
           }
         });
@@ -235,7 +235,7 @@ export class UsersController {
         await this.usersService.update(id, { imagen: null });
       }
     } else {
-      console.log('El usuario no tiene una imagen asociada.');
+      throw new BadRequestException('Error eliminando la imagen:');
     }
 
     const data = await this.usersService.remove(id);
