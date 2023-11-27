@@ -64,7 +64,6 @@ export class UsersController {
     };
   }
 
-  @Auth({ resource: AppResource.users, action: 'read', possession: 'any' })
   @Get()
   async findAll() {
     const data = await this.usersService.findAll();
