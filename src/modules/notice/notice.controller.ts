@@ -78,6 +78,15 @@ export class NoticeController {
       data: data,
     };
   }
+  @Get('total')
+  async getTotalCount() {
+    const totalNotices = await this.noticeService.getTotalNotices();
+
+    return {
+      message: 'Noticias obtenidas con éxito',
+      data: totalNotices,
+    };
+  }
 
   @Get('noticiasasc')
   async findNoticiasAsc() {
@@ -96,16 +105,6 @@ export class NoticeController {
     return {
       message: 'Noticias obtenidas con éxito',
       data: data,
-    };
-  }
-
-  @Get('total')
-  async getTotalCount() {
-    const totalNotices = await this.noticeService.getTotalNotices();
-
-    return {
-      message: 'Noticias obtenidas con éxito',
-      data: totalNotices,
     };
   }
 

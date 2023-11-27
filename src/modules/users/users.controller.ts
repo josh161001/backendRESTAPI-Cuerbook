@@ -64,7 +64,7 @@ export class UsersController {
     };
   }
 
-  // devuelve todos los usuarios
+  @Auth({ resource: AppResource.users, action: 'read', possession: 'any' })
   @Get()
   async findAll() {
     const data = await this.usersService.findAll();

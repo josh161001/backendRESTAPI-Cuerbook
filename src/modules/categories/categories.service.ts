@@ -41,15 +41,6 @@ export class CategoriesService {
     return category;
   }
 
-  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    const categoria = await this.categoryRepository.update(
-      id,
-      updateCategoryDto,
-    );
-
-    return categoria;
-  }
-
   remove(id: number) {
     return this.categoryRepository.delete(id);
   }

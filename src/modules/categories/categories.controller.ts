@@ -29,6 +29,7 @@ export class CategoriesController {
     return await this.categoriesService.create(createCategoryDto);
   }
 
+  @Auth({ resource: AppResource.categories, action: 'read', possession: 'any' })
   @Get()
   async findAll() {
     const data = await this.categoriesService.findAll();
@@ -38,6 +39,7 @@ export class CategoriesController {
     };
   }
 
+  @Auth({ resource: AppResource.categories, action: 'read', possession: 'any' })
   @Get('total')
   async getCategoriastotalCategorias() {
     const totalCategorias =
@@ -48,11 +50,6 @@ export class CategoriesController {
     };
   }
 
-  @Auth({
-    resource: AppResource.categories,
-    action: 'read',
-    possession: 'any',
-  })
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.categoriesService.findOne(id);
@@ -61,19 +58,6 @@ export class CategoriesController {
   @Auth({
     resource: AppResource.categories,
     action: 'update',
-    possession: 'any',
-  })
-  @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() updateCategoryDto: UpdateCategoryDto,
-  ) {
-    return this.categoriesService.update(id, updateCategoryDto);
-  }
-
-  @Auth({
-    resource: AppResource.categories,
-    action: 'delete',
     possession: 'any',
   })
   @Delete(':id')

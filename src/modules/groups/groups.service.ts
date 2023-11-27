@@ -65,7 +65,6 @@ export class GroupsService {
     return totalGrupos;
   }
 
-  // devuelve el grupo con id si coincide con el id del usuario logueado o si el usuario es un administrador
   async getByIdUser(id: string, userEntity?: User): Promise<Group> {
     const grupo = await this.groupRepository
       .findOne({ where: { id: id } })
