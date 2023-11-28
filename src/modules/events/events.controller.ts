@@ -79,6 +79,11 @@ export class EventsController {
     };
   }
 
+  @Auth({
+    resource: AppResource.events,
+    action: 'read',
+    possession: 'any',
+  })
   @Get()
   async findAll() {
     const data = await this.eventsService.findAll();
@@ -114,7 +119,11 @@ export class EventsController {
       data: data,
     };
   }
-
+  @Auth({
+    resource: AppResource.events,
+    action: 'read',
+    possession: 'any',
+  })
   @Get('total')
   async getEventCount() {
     const totalEventos = await this.eventsService.getTotalEventos();

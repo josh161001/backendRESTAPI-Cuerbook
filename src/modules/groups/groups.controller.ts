@@ -73,6 +73,11 @@ export class GroupsController {
     };
   }
 
+  @Auth({
+    resource: AppResource.groups,
+    action: 'read',
+    possession: 'any',
+  })
   @Get()
   async findAll() {
     const data = await this.groupsService.findAll();
@@ -99,6 +104,11 @@ export class GroupsController {
     };
   }
 
+  @Auth({
+    resource: AppResource.groups,
+    action: 'read',
+    possession: 'any',
+  })
   @Get('total')
   async getGruposCount() {
     const totalGrupos = await this.groupsService.getTotalGrupos();

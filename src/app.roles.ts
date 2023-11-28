@@ -34,6 +34,8 @@ roles
   .createAny([AppResource.users])
   .updateAny([AppResource.events, AppResource.users])
   .deleteAny([AppResource.events, AppResource.users])
+  .readAny([AppResource.events])
+  .readAny([AppResource.groups])
   .updateAny([AppResource.groups])
   .deleteAny([AppResource.groups])
   .readAny([AppResource.groups])
