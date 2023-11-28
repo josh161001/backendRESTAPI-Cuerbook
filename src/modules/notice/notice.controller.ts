@@ -69,6 +69,11 @@ export class NoticeController {
     };
   }
 
+  @Auth({
+    resource: AppResource.notice,
+    action: 'read',
+    possession: 'any',
+  })
   @Get()
   async findAll() {
     const data = await this.noticeService.findAll();
@@ -78,6 +83,11 @@ export class NoticeController {
       data: data,
     };
   }
+  @Auth({
+    resource: AppResource.notice,
+    action: 'read',
+    possession: 'any',
+  })
   @Get('total')
   async getTotalCount() {
     const totalNotices = await this.noticeService.getTotalNotices();

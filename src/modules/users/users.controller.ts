@@ -63,7 +63,7 @@ export class UsersController {
       data,
     };
   }
-
+  @Auth({ resource: AppResource.users, action: 'read', possession: 'any' })
   @Get()
   async findAll() {
     const data = await this.usersService.findAll();
@@ -72,7 +72,7 @@ export class UsersController {
       data,
     };
   }
-
+  @Auth({ resource: AppResource.users, action: 'read', possession: 'any' })
   @Get('total')
   async getUserCount() {
     const usuariosTotal = await this.usersService.getTotalUsers();
@@ -82,6 +82,7 @@ export class UsersController {
       usuariosTotal,
     };
   }
+
   // devuelve el usuario con id
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -204,7 +205,6 @@ export class UsersController {
         user,
       );
     }
-
     return {
       message: 'Password actualizada',
       data,
