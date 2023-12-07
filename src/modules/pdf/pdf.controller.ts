@@ -8,7 +8,6 @@ import { AppResource } from 'src/app.roles';
 export class PdfController {
   constructor(private readonly pdfService: PdfService) {}
 
-  @Auth({ resource: AppResource.pdf, action: 'read', possession: 'any' })
   @Get('generate-pdf/:eventoId')
   async generatePdf(@Param('eventoId') eventoId: string, @Res() res: Response) {
     const pdfBuffer = await this.pdfService.generatePdf(eventoId);

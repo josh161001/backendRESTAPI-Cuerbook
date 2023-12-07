@@ -29,7 +29,6 @@ export class CategoriesController {
     return await this.categoriesService.create(createCategoryDto);
   }
 
-  @Auth({ resource: AppResource.categories, action: 'read', possession: 'any' })
   @Get()
   async findAll() {
     const data = await this.categoriesService.findAll();

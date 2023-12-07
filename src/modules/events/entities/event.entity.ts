@@ -35,7 +35,11 @@ export class Event {
   @Column({ nullable: false })
   lugar: string;
 
-  @Column({ type: 'text', nullable: false })
+  @Column({
+    type: 'text',
+    nullable: true,
+    default: 'aqui va la descripcion del evento',
+  })
   description: string;
 
   @Column({ nullable: false, type: 'text' })

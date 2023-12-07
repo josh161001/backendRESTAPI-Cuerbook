@@ -43,8 +43,6 @@ roles
   .createAny([AppResource.notice])
   .updateAny([AppResource.notice])
   .deleteAny([AppResource.notice])
-  .readAny([AppResource.pdf])
-  .readAny([AppResource.categories])
   .createAny([AppResource.categories])
   .updateAny([AppResource.categories])
   .deleteAny([AppResource.categories]);

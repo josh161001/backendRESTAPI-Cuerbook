@@ -255,7 +255,6 @@ export class EventsController {
         user,
       );
     }
-
     return {
       message: 'Evento actualizado con éxito',
       data,
