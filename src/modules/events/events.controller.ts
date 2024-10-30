@@ -62,7 +62,7 @@ export class EventsController {
     @User() user: UserEntity,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
-    const baseUrl = 'https://cuerbook-backend.onrender.com';
+    const baseUrl = 'http://localhost:5000';
 
     createEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -79,11 +79,6 @@ export class EventsController {
     };
   }
 
-  @Auth({
-    resource: AppResource.events,
-    action: 'read',
-    possession: 'any',
-  })
   @Get()
   async findAll() {
     const data = await this.eventsService.findAll();
@@ -188,7 +183,7 @@ export class EventsController {
               }
             });
           } else {
-            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            const baseUrl = 'http://localhost:5000';
             evento.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.eventsService.update(
               id,
@@ -196,10 +191,10 @@ export class EventsController {
               categoryId,
             );
           }
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         }
       } else {
@@ -226,7 +221,7 @@ export class EventsController {
               }
             });
           } else {
-            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            const baseUrl = 'http://localhost:5000';
             evento.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.eventsService.update(
               id,
@@ -235,10 +230,10 @@ export class EventsController {
               user,
             );
           }
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateEventDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         }
       } else {

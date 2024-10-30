@@ -57,7 +57,7 @@ export class NoticeController {
       throw new BadRequestException('imagen requerida');
     }
 
-    const baseUrl = 'https://cuerbook-backend.onrender.com';
+    const baseUrl = 'http://localhost:5000';
 
     createNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -69,11 +69,6 @@ export class NoticeController {
     };
   }
 
-  @Auth({
-    resource: AppResource.notice,
-    action: 'read',
-    possession: 'any',
-  })
   @Get()
   async findAll() {
     const data = await this.noticeService.findAll();
@@ -172,11 +167,11 @@ export class NoticeController {
             });
           }
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           notice.imagen = `${baseUrl}/upload/${imagen.filename}`;
           await this.noticeService.update(id, { imagen: notice.imagen });
         }
-        const baseUrl = 'https://cuerbook-backend.onrender.com';
+        const baseUrl = 'http://localhost:5000';
         updateNoticeDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
       } else {
         const notice = await this.noticeService.findOne(id);

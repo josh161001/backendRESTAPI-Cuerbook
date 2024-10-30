@@ -61,7 +61,7 @@ export class GroupsController {
     @User() user: UserEntity,
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
-    const baseUrl = 'https://cuerbook-backend.onrender.com';
+    const baseUrl = 'http://localhost:5000';
 
     createGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
@@ -73,11 +73,11 @@ export class GroupsController {
     };
   }
 
-  @Auth({
-    resource: AppResource.groups,
-    action: 'read',
-    possession: 'any',
-  })
+  // @Auth({
+  //   resource: AppResource.groups,
+  //   action: 'read',
+  //   possession: 'any',
+  // })
   @Get()
   async findAll() {
     const data = await this.groupsService.findAll();
@@ -174,14 +174,14 @@ export class GroupsController {
               }
             });
           } else {
-            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            const baseUrl = 'http://localhost:5000';
             grupo.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.groupsService.update(id, { imagen: grupo.imagen });
           }
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         }
       } else {
@@ -207,14 +207,14 @@ export class GroupsController {
               }
             });
           } else {
-            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            const baseUrl = 'http://localhost:5000';
             grupo.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.groupsService.update(id, { imagen: grupo.imagen });
           }
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateGroupDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         }
       } else {

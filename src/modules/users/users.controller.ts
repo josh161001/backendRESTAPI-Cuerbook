@@ -54,7 +54,7 @@ export class UsersController {
   ) {
     if (!imagen) throw new BadRequestException('Imagen requerida');
 
-    const baseUrl = 'https://cuerbook-backend.onrender.com';
+    const baseUrl = 'http://localhost:5000';
     createUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
 
     const data = await this.usersService.createUser(createUserDto);
@@ -128,15 +128,15 @@ export class UsersController {
               }
             });
           } else {
-            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            const baseUrl = 'http://localhost:5000';
             usuario.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.usersService.update(id, { imagen: usuario.imagen });
           }
 
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         }
       } else {
@@ -162,15 +162,15 @@ export class UsersController {
               }
             });
           } else {
-            const baseUrl = 'https://cuerbook-backend.onrender.com';
+            const baseUrl = 'http://localhost:5000';
             usuario.imagen = `${baseUrl}/upload/${imagen.filename}`;
             await this.usersService.update(id, { imagen: usuario.imagen });
           }
 
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         } else {
-          const baseUrl = 'https://cuerbook-backend.onrender.com';
+          const baseUrl = 'http://localhost:5000';
           updateUserDto.imagen = `${baseUrl}/upload/${imagen.filename}`;
         }
       } else {
